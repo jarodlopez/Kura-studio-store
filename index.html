@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kura Studio | Anime, Fan, Art</title>
+    <title>Kura Studio | Smart Checkout</title>
     
     <!-- TAILWIND CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+
+    <!-- LEAFLET CSS (MAPAS) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
     <!-- FIREBASE (V8 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -23,6 +27,10 @@
 
     <!-- LUCIDE ICONS -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- LEAFLET JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <style>
         :root {
@@ -41,21 +49,47 @@
             overflow-x: hidden;
         }
 
-        /* --- EFECTO DE RUIDO --- */
-        .noise-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.05;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        }
+        /* --- ANIMACIONES --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
 
-        /* --- TYPOGRAPHY & HEADER --- */
+        /* --- MAP OVERRIDES --- */
+        .leaflet-container { background: #0a0a0a; font-family: 'JetBrains Mono', monospace; z-index: 10; }
+        .leaflet-routing-container { display: none !important; }
+        .leaflet-bar a { background-color: #111 !important; color: white !important; border-bottom: 1px solid #333 !important; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #111 !important; color: white !important; border: 1px solid var(--neon-red); border-radius: 0 !important; }
+        .leaflet-control-container .leaflet-routing-container-hide { display: none; }
+
+        /* --- UI UTILS --- */
+        .btn-cyber {
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.2s;
+        }
+        .btn-cyber:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--neon-red); }
+        .btn-cyber:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .shop-input {
+            width: 100%; background: #111; border: 1px solid #333; color: white; padding: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; transition: border-color 0.3s;
+        }
+        .shop-input:focus { border-color: var(--neon-red); outline: none; }
+
+        .toast-enter { transform: translateY(-20px); opacity: 0; }
+        .toast-active { transform: translateY(0); opacity: 1; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-red); }
+        
+        .custom-div-icon { background: transparent; border: none; }
+        
+        /* Typography */
         .font-logo { font-family: 'Syncopate', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Letras Japonesas Verticales con Efecto */
+        
         .jp-dynamic {
             writing-mode: vertical-rl;
             text-orientation: upright;
@@ -69,18 +103,17 @@
             text-shadow: 0 0 5px var(--neon-red);
             margin-left: 10px;
         }
-
         @keyframes energy-pulse {
             0% { opacity: 0.8; text-shadow: 0 0 2px var(--neon-red); }
             100% { opacity: 1; text-shadow: 0 0 8px var(--neon-red); }
         }
-
-        /* --- MARQUESINA --- */
+        
+        /* Marquee */
         .marquee-container { overflow: hidden; white-space: nowrap; position: relative; }
         .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- GLITCH TEXT --- */
+        /* Glitch */
         .glitch-text { position: relative; }
         .glitch-text::before, .glitch-text::after {
             content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--cyber-black);
@@ -96,36 +129,13 @@
             40% { clip: rect(5px, 9999px, 66px, 0); } 60% { clip: rect(32px, 9999px, 88px, 0); }
             80% { clip: rect(76px, 9999px, 3px, 0); } 100% { clip: rect(10px, 9999px, 92px, 0); }
         }
-
-        /* --- UI COMPONENTS --- */
-        .btn-cyber {
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-            transition: all 0.2s;
-        }
-        .btn-cyber:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--neon-red); }
-        
-        .shop-input {
-            width: 100%; background: #111; border: 1px solid #333; color: white; padding: 12px;
-            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; transition: border-color 0.3s;
-        }
-        .shop-input:focus { border-color: var(--neon-red); outline: none; }
-
-        /* Toast Animation */
-        .toast-enter { transform: translateY(-20px); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-red); }
     </style>
 </head>
 <body>
-    <div class="noise-overlay"></div>
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- 0. MOCK DATA ---
+        // --- 0. MOCK DATA & CONFIG ---
         const MOCK_PRODUCTS = [
             { id: '1', name: 'UNIT-01 HOODIE', price: 1200, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070&auto=format&fit=crop', description: 'Sudadera oversize de alto gramaje. Algodón peinado. Estampado puff print en espalda.' },
             { id: '2', name: 'CYBER CARGO V2', price: 1800, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=1997&auto=format&fit=crop', description: 'Pantalón cargo técnico con múltiples bolsillos y correas ajustables. Tela ripstop.' },
@@ -133,17 +143,26 @@
             { id: '4', name: 'MECHA VEST', price: 2100, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2020&auto=format&fit=crop', description: 'Chaleco táctico utilitario. Ideal para layering.' },
         ];
 
-        // --- 1. CONFIG & UTILS ---
-        const { useState, useEffect, useMemo } = React;
-        const { createRoot } = ReactDOM;
-        
         const PHONE = "+50587091008";
         const BANK_ACCOUNT = "123456789"; 
         const KASH_QR_URL = "https://raw.githubusercontent.com/jarodlopez/Kura-studio-store/refs/heads/main/IMG-20251203-WA0009.jpg";
+        
+        // --- CONFIGURACIÓN DE ENVÍO ACTUALIZADA ---
+        const MAP_CONFIG = {
+            origin: { lat: 12.1418164, lng: -86.2569277 }, 
+            baseRate: 80,       // Costo base
+            baseDistance: 3,    // Primeros 3km
+            extraRate: 13,      // Costo por km extra (Actualizado a 13)
+        };
 
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { createRoot } = ReactDOM;
+
+        // --- FIREBASE INIT ---
         const firebaseConfig = {
             apiKey: "AIzaSyAztg4F0twRi2NOP8MayAOUYB0ZtHgkss0",
             authDomain: "kodialabsnic.firebaseapp.com",
+            databaseURL: "https://kodialabsnic-default-rtdb.firebaseio.com",
             projectId: "kodialabsnic",
             storageBucket: "kodialabsnic.firebasestorage.app",
             messagingSenderId: "740746852984",
@@ -151,12 +170,21 @@
         };
 
         let db, auth, isFirebaseActive = false;
+        
         try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            auth = firebase.auth();
-            isFirebaseActive = true;
-        } catch (e) { console.warn("Firebase Error (Mock Mode):", e); }
+            if (window.firebase) {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+                isFirebaseActive = true;
+                console.log("Firebase initialized successfully");
+            }
+        } catch (e) { 
+            console.warn("FIREBASE FAILED TO INIT:", e.message); 
+            isFirebaseActive = false;
+        }
 
         const Icon = ({ name, size = 20, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
@@ -165,15 +193,16 @@
 
         const formatPrice = (p) => typeof p === 'number' ? p.toFixed(2) : "0.00";
 
-        // --- 2. COMMON UI ---
-        const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
+        // --- UI COMPONENTS ---
+        const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false, type = "button" }) => {
             const baseClass = "btn-cyber font-mono font-bold uppercase tracking-widest px-8 py-4 flex items-center justify-center gap-3 text-sm";
             const variants = {
                 primary: "bg-[#ff003c] text-white hover:bg-white hover:text-black",
                 outline: "bg-transparent border border-neutral-600 text-white hover:border-[#ff003c] hover:text-[#ff003c]",
-                acid: "bg-[#ccff00] text-black hover:bg-white"
+                acid: "bg-[#ccff00] text-black hover:bg-white",
+                ghost: "bg-transparent text-neutral-500 hover:text-white"
             };
-            return <button onClick={onClick} className={`${baseClass} ${variants[variant]} ${className}`}>{children}</button>;
+            return <button type={type} disabled={disabled} onClick={onClick} className={`${baseClass} ${variants[variant]} ${className}`}>{children}</button>;
         };
 
         const Toast = ({ show, message }) => (
@@ -183,6 +212,24 @@
             </div>
         );
 
+        const CriticalErrorBanner = ({ error, onClose }) => {
+            if (!error) return null;
+            return (
+                <div className="fixed inset-x-0 top-0 z-[10001] bg-red-800 text-white p-4 font-mono text-xs shadow-2xl animate-fade-in">
+                    <div className="max-w-7xl mx-auto flex justify-between items-start">
+                        <div className="flex items-start gap-4">
+                            <Icon name="alert-triangle" size={24} className="text-yellow-400 mt-1 flex-shrink-0"/>
+                            <div>
+                                <h3 className="font-bold uppercase text-base text-yellow-300">ERROR CRÍTICO DEL SISTEMA</h3>
+                                <p className="mt-1">**Mensaje técnico:** {error}</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="text-white hover:text-red-300 transition-colors"><Icon name="x" size={18}/></button>
+                    </div>
+                </div>
+            );
+        };
+
         const Marquee = () => (
             <div className="bg-[#ff003c] text-black font-bold font-mono text-xs py-1 border-b border-[#ff003c] marquee-container select-none">
                 <div className="marquee-content">
@@ -190,19 +237,14 @@
                     <span className="mx-4">NEW COLLECTION AVAILABLE NOW</span><span className="mx-4">///</span>
                     <span className="mx-4">WORLDWIDE SHIPPING</span><span className="mx-4">///</span>
                     <span className="mx-4">KURA STUDIO 2026</span><span className="mx-4">///</span>
-                    <span className="mx-4">📦ENVÍOS A TODA NICARAGUA </span><span className="mx-4">///</span>
-                    <span className="mx-4">NEW COLLECTION AVAILABLE NOW</span>
                 </div>
             </div>
         );
 
-        // --- 3. SECTIONS ---
-
-        // HERO CARROUSEL (FIXED: Sin imágenes placeholder, espera a que carguen los datos)
+        // --- HERO COMPONENT ---
         const Hero = ({ products }) => {
             const [index, setIndex] = useState(0);
             
-            // Solo usamos imágenes válidas de productos reales. Si no hay, array vacío.
             const images = useMemo(() => {
                 return products.filter(p => p.image).map(p => p.image).slice(0, 4);
             }, [products]);
@@ -213,144 +255,320 @@
                 return () => clearInterval(t);
             }, [images]);
 
+            const scrollToShop = () => {
+                const shopEl = document.getElementById('shop');
+                if(shopEl) shopEl.scrollIntoView({behavior: 'smooth'});
+            };
+
             return (
                 <div className="relative h-[85vh] w-full bg-black overflow-hidden flex items-center justify-center border-b border-[#222]">
-                    {/* Background: Si no hay imágenes, se ve negro. Si hay, muestra el carrusel */}
                     {images.length > 0 ? images.map((img, i) => (
                         <div key={i} className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${i === index ? 'opacity-60' : 'opacity-0'}`} style={{backgroundImage: `url('${img}')`}}></div>
                     )) : (
-                        <div className="absolute inset-0 bg-[#050505]"></div> // Fondo negro limpio mientras carga
+                        <div className="absolute inset-0 bg-[#050505]"></div> 
                     )}
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-black/30"></div>
                     <div className="absolute inset-0 pointer-events-none" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px'}}></div>
 
                     <div className="relative z-10 text-center px-4">
-                        <div className="inline-block border border-[#ff003c] px-3 py-1 mb-6 bg-black/60 backdrop-blur-sm">
+                        <div className="inline-block border border-[#ff003c] px-3 py-1 mb-6 bg-black/60 backdrop-blur-sm animate-fade-in">
                             <span className="text-[#ff003c] text-[10px] font-bold tracking-[0.4em] uppercase">COLLECTION 2026</span>
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-black font-logo uppercase text-white mb-8 tracking-tighter glitch-text" data-text="ANIME CULTURE">
+                        <h1 className="text-5xl md:text-8xl font-black font-logo uppercase text-white mb-8 tracking-tighter glitch-text animate-fade-in" data-text="ANIME CULTURE">
                             ANIME<br/>CULTURE
                         </h1>
-                        <div className="mt-8 flex justify-center">
-                            <Button onClick={() => document.getElementById('shop').scrollIntoView({ behavior: 'smooth' })} className="mx-auto">VER DROPS</Button>
+                        <div className="mt-8 flex justify-center animate-slide-up">
+                            <Button onClick={scrollToShop} className="mx-auto">VER DROPS</Button>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const ProductDetail = ({ product, onBack, onAdd }) => {
-            const [size, setSize] = useState('M');
-            const [showTable, setShowTable] = useState(false); // Estado para la guía
-
-            // COMPONENTE TABLA DE TALLAS (Reintegrado)
-            const SizeTable = () => (
-                <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
-                    <div className="bg-[#111] border border-[#ff003c] w-full max-w-2xl relative p-6 max-h-[90vh] overflow-y-auto animate-fade-in shadow-[0_0_50px_rgba(255,0,60,0.1)]">
-                        <button onClick={() => setShowTable(false)} className="absolute top-4 right-4 text-white hover:text-[#ff003c]"><Icon name="x"/></button>
-                        <h3 className="text-[#ff003c] font-bold uppercase tracking-widest mb-6 border-b border-[#333] pb-2 text-center">GUÍA DE TALLAS (CM)</h3>
-                        <table className="w-full text-center text-sm font-mono text-neutral-400">
-                            <thead className="bg-[#0a0a0a] text-white font-bold border-b border-[#333]"><tr><th className="p-3 text-left">MEDIDA</th><th>XS</th><th>S</th><th>M</th><th>L</th></tr></thead>
-                            <tbody className="divide-y divide-neutral-900">
-                                <tr><td className="p-3 text-left text-white">Pecho</td><td>42</td><td>47</td><td>52</td><td>58</td></tr>
-                                <tr><td className="p-3 text-left text-white">Hombro a hombro</td><td>45</td><td>49</td><td>54.5</td><td>57.4</td></tr>
-                                <tr><td className="p-3 text-left text-white">Largo total</td><td>69</td><td>70</td><td>73.5</td><td>76</td></tr>
-                                <tr><td className="p-3 text-left text-white">Abertura Manga</td><td>18</td><td>19</td><td>22</td><td>22.2</td></tr>
-                                <tr><td className="p-3 text-left text-white">Largo Manga</td><td>22</td><td>23</td><td>25</td><td>26</td></tr>
-                                <tr><td className="p-3 text-left text-white">Ancho cuello</td><td>3</td><td>3</td><td>3</td><td>3</td></tr>
-                                <tr><td className="p-3 text-left text-white">Prof. Escote</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+        // --- COMPONENTS OPTIMIZADOS ---
+        
+        // 1. REPARACIÓN DE GUÍA DE TALLAS (Más amigable para móvil)
+        const SizeTable = ({ onClose }) => (
+            <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+                <div className="bg-[#111] border border-[#ff003c] w-full max-w-lg relative p-0 overflow-hidden shadow-[0_0_50px_rgba(255,0,60,0.1)] animate-slide-up" onClick={e => e.stopPropagation()}>
+                    <div className="bg-[#0a0a0a] border-b border-[#333] p-4 flex justify-between items-center">
+                         <h3 className="text-[#ff003c] font-bold uppercase tracking-widest text-sm flex items-center gap-2"><Icon name="ruler" size={16}/> GUÍA DE TALLAS (CM)</h3>
+                         <button onClick={onClose} className="text-neutral-400 hover:text-white"><Icon name="x" size={20}/></button>
+                    </div>
+                    <div className="overflow-x-auto p-4 max-h-[60vh] overflow-y-auto">
+                        <table className="w-full text-center text-xs font-mono text-neutral-400 border-collapse">
+                            <thead className="text-white font-bold bg-[#1a1a1a]">
+                                <tr>
+                                    <th className="p-3 border border-[#333] text-left">MEDIDA</th>
+                                    <th className="p-3 border border-[#333]">XS</th>
+                                    <th className="p-3 border border-[#333]">S</th>
+                                    <th className="p-3 border border-[#333]">M</th>
+                                    <th className="p-3 border border-[#333]">L</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#222]">
+                                <tr><td className="p-3 border border-[#333] text-left font-bold text-white">Pecho</td><td className="border border-[#333]">42</td><td className="border border-[#333]">47</td><td className="border border-[#333]">52</td><td className="border border-[#333]">58</td></tr>
+                                <tr><td className="p-3 border border-[#333] text-left font-bold text-white">Largo</td><td className="border border-[#333]">69</td><td className="border border-[#333]">70</td><td className="border border-[#333]">73.5</td><td className="border border-[#333]">76</td></tr>
+                                <tr><td className="p-3 border border-[#333] text-left font-bold text-white">Manga</td><td className="border border-[#333]">20</td><td className="border border-[#333]">21</td><td className="border border-[#333]">22</td><td className="border border-[#333]">23</td></tr>
                             </tbody>
                         </table>
+                        <p className="text-[10px] text-neutral-500 mt-4 text-center font-mono">* Las medidas pueden variar +/- 1cm.</p>
+                    </div>
+                    <div className="p-4 border-t border-[#222] bg-[#0a0a0a]">
+                        <Button onClick={onClose} variant="outline" className="w-full py-3 text-xs">ENTENDIDO</Button>
                     </div>
                 </div>
-            );
+            </div>
+        );
+
+        // 2. MEJORA VISTA DE DETALLE (Móvil optimizado)
+        const ProductDetail = ({ product, onBack, onAdd }) => {
+            const [size, setSize] = useState('M');
+            const [qty, setQty] = useState(1);
+            const [showTable, setShowTable] = useState(false);
 
             return (
-                <div className="min-h-screen pt-32 pb-20 px-4 container mx-auto animate-fade-in">
-                    {showTable && <SizeTable />}
-                    <button onClick={onBack} className="flex items-center gap-2 text-neutral-500 hover:text-[#ff003c] mb-8 font-mono text-xs font-bold uppercase tracking-widest transition-colors">
-                        <Icon name="arrow-left" size={16}/> VOLVER
+                <div className="min-h-screen pt-24 pb-20 px-4 container mx-auto animate-fade-in relative max-w-6xl">
+                    {showTable && <SizeTable onClose={() => setShowTable(false)} />}
+                    
+                    <button onClick={onBack} className="fixed top-24 left-4 z-40 bg-black/50 backdrop-blur px-4 py-2 rounded-full border border-[#333] flex items-center gap-2 text-white hover:text-[#ff003c] hover:border-[#ff003c] font-mono text-xs font-bold uppercase tracking-widest transition-all">
+                        <Icon name="arrow-left" size={14}/> VOLVER
                     </button>
-                    <div className="grid lg:grid-cols-2 gap-16">
-                        <div className="bg-[#0a0a0a] border border-[#222] relative group h-[500px] lg:h-[600px] w-full flex items-center justify-center p-4">
-                            <img src={product.image} className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-105"/>
-                            <div className="absolute bottom-4 right-4 bg-black/80 px-2 py-1 text-[10px] text-neutral-400 font-mono border border-[#333]">V.01 DISPLAY</div>
+
+                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 mt-8">
+                        {/* Imagen - Ahora ocupa más espacio y se ve mejor en móvil */}
+                        <div className="bg-[#0a0a0a] border border-[#222] relative group aspect-square lg:h-[600px] w-full flex items-center justify-center p-6 overflow-hidden">
+                            <img src={product.image} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"/>
+                            <div className="absolute top-4 right-4 bg-[#ff003c] text-white text-[10px] font-bold px-3 py-1 uppercase rounded-sm">IN STOCK</div>
                         </div>
 
-                        <div className="flex flex-col justify-center">
-                            <h2 className="text-[#ff003c] font-mono text-sm tracking-[0.2em] mb-2">{product.category}</h2>
-                            <h1 className="text-5xl font-black font-logo text-white uppercase mb-6 leading-none">{product.name}</h1>
-                            <div className="text-3xl font-mono font-bold text-[#ccff00] mb-8 border-b border-[#222] pb-6">C$ {formatPrice(product.price)}</div>
-                            <p className="text-neutral-400 mb-8 leading-relaxed font-light">{product.description}</p>
+                        <div className="flex flex-col justify-center space-y-6">
+                            <div>
+                                <h2 className="text-[#ff003c] font-mono text-xs font-bold tracking-[0.2em] mb-2 flex items-center gap-2"><div className="w-4 h-[1px] bg-[#ff003c]"></div>{product.category}</h2>
+                                <h1 className="text-4xl md:text-6xl font-black font-logo text-white uppercase leading-none">{product.name}</h1>
+                            </div>
                             
-                            <div className="mb-10">
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-white font-mono uppercase">TALLA</span>
-                                    <button onClick={() => setShowTable(true)} className="text-[10px] text-[#ff003c] underline font-mono font-bold uppercase hover:text-white">VER GUÍA DE TALLAS</button>
-                                </div>
-                                <div className="flex gap-4">
-                                    {['S','M','L','XL'].map(s => (
-                                        <button key={s} onClick={() => setSize(s)} className={`w-14 h-14 border flex items-center justify-center font-mono font-bold text-sm transition-all ${size===s ? 'bg-white text-black border-white' : 'border-[#333] text-neutral-500 hover:border-[#ff003c] hover:text-[#ff003c]'}`}>{s}</button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center justify-between border-y border-[#222] py-4">
+                                <div className="text-3xl font-mono font-bold text-[#ccff00]">C$ {formatPrice(product.price)}</div>
+                                <div className="text-neutral-500 text-xs font-mono uppercase">IVA INCLUIDO</div>
                             </div>
-                            <Button onClick={() => onAdd(product, size)} variant="acid" className="w-full">AÑADIR AL CARRITO</Button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const CartDrawer = ({ isOpen, onClose, cart, remove, onCheckout }) => {
-            if (!isOpen) return null;
-            const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-            return (
-                <div className="fixed inset-0 z-[100] flex justify-end">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="relative w-full max-w-md bg-[#050505] border-l border-[#222] h-full flex flex-col shadow-2xl">
-                        <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#0a0a0a]">
-                            <h2 className="font-logo font-bold text-xl uppercase text-white">CARRITO ({cart.length})</h2>
-                            <button onClick={onClose} className="hover:text-[#ff003c] transition-colors"><Icon name="x" size={24}/></button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {cart.length === 0 ? <div className="text-center mt-20 text-neutral-600 font-mono">VACÍO</div> : cart.map((item, i) => (
-                                <div key={i} className="flex gap-4 bg-[#0a0a0a] p-3 border border-[#222] relative">
-                                    <img src={item.image} className="w-20 h-24 object-cover grayscale"/>
-                                    <div className="flex flex-col justify-between py-1">
-                                        <div><h4 className="font-bold text-white text-sm uppercase">{item.name}</h4><span className="text-xs font-mono text-neutral-500">{item.size} / x{item.qty}</span></div>
-                                        <span className="text-[#ccff00] font-mono font-bold">C$ {formatPrice(item.price)}</span>
+                            
+                            <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-light">{product.description}</p>
+                            
+                            <div className="space-y-6 bg-[#0f0f0f] p-4 rounded-sm border border-[#222]">
+                                {/* Selector de Talla */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs font-bold text-white font-mono uppercase flex items-center gap-2"><Icon name="shirt" size={14}/> SELECCIONAR TALLA</span>
+                                        <button onClick={() => setShowTable(true)} className="text-[10px] text-[#ff003c] underline font-mono font-bold uppercase hover:text-white">GUÍA DE TALLAS</button>
                                     </div>
-                                    <button onClick={() => remove(i)} className="absolute top-2 right-2 text-neutral-600 hover:text-[#ff003c]"><Icon name="trash-2" size={16}/></button>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['S','M','L','XL'].map(s => (
+                                            <button key={s} onClick={() => setSize(s)} className={`h-12 border flex items-center justify-center font-mono font-bold text-sm transition-all relative overflow-hidden ${size===s ? 'bg-white text-black border-white' : 'bg-[#050505] border-[#333] text-neutral-500 hover:border-[#ff003c] hover:text-[#ff003c]'}`}>
+                                                {s}
+                                                {size===s && <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#ff003c]"></div>}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                        {cart.length > 0 && (
-                            <div className="p-6 border-t border-[#222] bg-[#0a0a0a]">
-                                <div className="flex justify-between items-end mb-6 font-mono"><span className="text-neutral-500 text-sm">TOTAL</span><span className="text-2xl font-bold text-white">C$ {formatPrice(total)}</span></div>
-                                <Button className="w-full" onClick={onCheckout}>PAGAR AHORA</Button>
+                                
+                                {/* Cantidad */}
+                                <div>
+                                    <span className="block text-xs font-bold text-white font-mono uppercase mb-3">CANTIDAD</span>
+                                    <div className="flex items-center justify-between bg-[#050505] border border-[#333] p-1">
+                                        <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-12 h-10 hover:bg-[#222] text-white flex items-center justify-center transition-colors"><Icon name="minus" size={16}/></button>
+                                        <span className="font-mono font-bold text-lg text-white w-12 text-center">{qty}</span>
+                                        <button onClick={() => setQty(qty + 1)} className="w-12 h-10 hover:bg-[#222] text-white flex items-center justify-center transition-colors"><Icon name="plus" size={16}/></button>
+                                    </div>
+                                </div>
                             </div>
-                        )}
+                            
+                            <Button onClick={() => onAdd(product, size, qty)} variant="acid" className="w-full text-lg py-5 shadow-[0_0_20px_rgba(204,255,0,0.2)]">
+                                AÑADIR AL CARRITO - C$ {formatPrice(product.price * qty)}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        const Checkout = ({ cart, subtotal, onBack, onFinish }) => {
+        // 3. MAPA Y CHECKOUT (Mapa cuadrado y corrección de error de envío)
+        const SmartCheckout = ({ cart, subtotal, onBack, onFinish, setCriticalError }) => {
             const [step, setStep] = useState(1);
-            const [data, setData] = useState({ name: '', phone: '', address: '', method: '', cash: '' });
+            const [shippingCost, setShippingCost] = useState(0);
+            const [distance, setDistance] = useState(0);
+            const [destination, setDestination] = useState(null);
+            const [addressName, setAddressName] = useState('');
+            const [formData, setFormData] = useState({ name: '', phone: '', detail: '' });
+            const [paymentMethod, setPaymentMethod] = useState(''); 
+            const [cashAmount, setCashAmount] = useState('');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [isSearching, setIsSearching] = useState(false);
+            const [isCalculating, setIsCalculating] = useState(false);
             const [orderId, setOrderId] = useState(null);
             const [copied, setCopied] = useState(false);
 
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                if (!data.method) return alert("Selecciona método de pago");
+            const mapContainerRef = useRef(null);
+            const mapInstanceRef = useRef(null);
+            const routingControlRef = useRef(null);
+
+            const total = subtotal + shippingCost;
+
+            useEffect(() => {
+                if (step === 1 && mapContainerRef.current) {
+                    const L = window.L;
+                    if (!L) return;
+
+                    if (mapInstanceRef.current) {
+                        mapInstanceRef.current.invalidateSize();
+                        return;
+                    }
+                    
+                    try {
+                        const map = L.map(mapContainerRef.current, { 
+                            zoomControl: false,
+                            scrollWheelZoom: false // --- FIX: Prevenir scroll accidental ---
+                        }).setView([MAP_CONFIG.origin.lat, MAP_CONFIG.origin.lng], 13);
+                        
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                            attribution: '&copy; CartoDB',
+                            subdomains: 'abcd',
+                            maxZoom: 19
+                        }).addTo(map);
+
+                        const storeIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: #ff003c; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #ff003c;"></div>`,
+                            iconSize: [14, 14]
+                        });
+                        
+                        L.marker([MAP_CONFIG.origin.lat, MAP_CONFIG.origin.lng], { icon: storeIcon }).addTo(map);
+
+                        map.on('click', (e) => {
+                            handleRouteCalculation(e.latlng.lat, e.latlng.lng);
+                        });
+
+                        mapInstanceRef.current = map;
+                    } catch (e) {
+                        setCriticalError(`Error al inicializar el mapa: ${e.message}`);
+                    }
+                }
+            }, [step]);
+
+            const handleRouteCalculation = (lat, lng) => {
+                const L = window.L;
+                if (!L || !mapInstanceRef.current || !L.Routing) {
+                     setCriticalError("El módulo de ruteo (Leaflet Routing Machine) no está disponible.");
+                     return;
+                }
+                
+                setIsCalculating(true);
+                setDestination({ lat, lng });
+
+                if (routingControlRef.current) {
+                    try {
+                        mapInstanceRef.current.removeControl(routingControlRef.current);
+                    } catch (e) { console.warn("Error removing control", e); }
+                }
+
+                try {
+                    const control = L.Routing.control({
+                        waypoints: [
+                            L.latLng(MAP_CONFIG.origin.lat, MAP_CONFIG.origin.lng),
+                            L.latLng(lat, lng)
+                        ],
+                        lineOptions: { 
+                            styles: [{ color: '#ccff00', opacity: 0.8, weight: 4 }],
+                            addWaypoints: false 
+                        },
+                        createMarker: (i, wp) => {
+                            if (i === 0) return null; 
+                            return L.marker(wp.latLng, {
+                                draggable: true,
+                                icon: L.divIcon({
+                                    className: 'custom-div-icon',
+                                    html: `<div style="background-color: #ccff00; width: 20px; height: 20px; border-radius: 50%; border: 3px solid black; box-shadow: 0 0 15px #ccff00;"></div>`,
+                                    iconSize: [20, 20],
+                                    iconAnchor: [10, 10]
+                                })
+                            });
+                        },
+                        addWaypoints: false,
+                        draggableWaypoints: false,
+                        fitSelectedRoutes: false,
+                        show: false,
+                        containerClassName: 'leaflet-routing-container-hide'
+                    }).addTo(mapInstanceRef.current);
+
+                    routingControlRef.current = control;
+
+                    control.on('routesfound', (e) => {
+                        const d = e.routes[0].summary.totalDistance / 1000;
+                        setDistance(d);
+                        
+                        // --- LÓGICA DE COSTO DE ENVÍO ACTUALIZADA ---
+                        let cost = MAP_CONFIG.baseRate; // 80 base
+                        if (d > MAP_CONFIG.baseDistance) {
+                            // 13 por km extra
+                            cost += Math.ceil(d - MAP_CONFIG.baseDistance) * MAP_CONFIG.extraRate;
+                        }
+                        
+                        setShippingCost(cost);
+                        setIsCalculating(false);
+                        
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                            .then(res => res.json())
+                            .then(data => setAddressName(data.address?.road || data.display_name?.split(',')[0] || "Punto seleccionado"))
+                            .catch(() => setAddressName("Coordenadas seleccionadas"));
+                    });
+                    
+                    control.on('routingerror', () => {
+                        setIsCalculating(false);
+                        setCriticalError("Error al calcular la ruta OSRM. Intenta acercar el punto a una calle principal.");
+                    });
+
+                } catch (error) {
+                    setCriticalError(`Error al ejecutar L.Routing: ${error.message}`);
+                    setIsCalculating(false);
+                }
+            };
+
+            const handleSearch = async (e) => {
+                if (e.type === 'keydown' && e.key !== 'Enter') return;
+                
+                e.preventDefault(); 
+                if (!searchQuery) return;
+                setIsSearching(true);
+                
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=ni&viewbox=-86.4,-11.9,-86.1,12.3&bounded=1`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat); 
+                        const lon = parseFloat(data[0].lon); 
+                        
+                        if (!isNaN(lat) && !isNaN(lon) && mapInstanceRef.current) {
+                            mapInstanceRef.current.setView([lat, lon], 16);
+                            handleRouteCalculation(lat, lon);
+                            mapInstanceRef.current.invalidateSize(); 
+                        }
+                    } else {
+                        alert("Lugar no encontrado en el área de Managua.");
+                    }
+                } catch(err) { 
+                    setCriticalError(`Error en fetch de búsqueda: ${err.message}`);
+                } finally { 
+                    setIsSearching(false); 
+                }
+            };
+
+            const confirmOrder = async () => {
                 const newId = `ORD-${Date.now().toString().slice(-6)}`;
                 setOrderId(newId);
-                if (isFirebaseActive && db) {
-                    try { await db.collection('orders').add({ ...data, cart, subtotal, total: subtotal, id: newId, date: new Date() }); } catch(e){}
-                }
-                setStep(2);
+                setStep(4);
             };
 
             const copyToClipboard = () => {
@@ -359,103 +577,171 @@
                 setTimeout(() => setCopied(false), 2000);
             };
 
-            if (step === 2) {
+            if (step === 4) {
                 return (
-                    <div className="min-h-screen pt-32 px-4 flex items-center justify-center pb-20">
-                        <div className="max-w-md w-full bg-[#111] border border-[#ff003c] p-8 text-center relative shadow-[0_0_50px_rgba(255,0,60,0.1)]">
-                            <div className="w-16 h-16 bg-[#ff003c] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_#ff003c]">
+                    <div className="min-h-screen pt-32 px-4 flex items-center justify-center pb-20 animate-fade-in">
+                        <div className="max-w-md w-full bg-[#111] border border-[#ff003c] p-8 text-center relative shadow-[0_0_50px_rgba(255,0,60,0.1)] animate-slide-up">
+                            <div className="w-16 h-16 bg-[#ff003c] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_#ff003c] animate-bounce">
                                 <Icon name="check" size={32} className="text-white"/>
                             </div>
                             <h2 className="text-2xl font-black font-logo uppercase mb-2">¡ORDEN CONFIRMADA!</h2>
                             <p className="text-[#ff003c] font-mono text-xl font-bold mb-6">{orderId}</p>
 
-                            <div className="bg-[#0a0a0a] border border-[#333] p-6 mb-8 rounded">
-                                <p className="text-neutral-400 text-xs font-mono mb-4 uppercase tracking-widest">MÉTODO: <span className="text-white font-bold">{data.method}</span></p>
+                            <div className="bg-[#0a0a0a] border border-[#333] p-6 mb-8 rounded text-left">
+                                <p className="text-neutral-400 text-xs font-mono mb-4 uppercase tracking-widest text-center">MÉTODO: <span className="text-white font-bold">{paymentMethod}</span></p>
                                 
-                                {data.method === 'Kash' && (
+                                {paymentMethod === 'Kash' && (
                                     <div className="flex flex-col items-center animate-fade-in">
-                                        <p className="text-white text-xs font-bold mb-3 uppercase">Escanea para pagar</p>
-                                        <div className="bg-white p-2 rounded shadow-lg">
-                                            <img src={KASH_QR_URL} className="w-48 h-48 object-contain"/>
-                                        </div>
+                                        <p className="text-white text-xs font-bold mb-3 uppercase">Escanea QR Kash</p>
+                                        <div className="bg-white p-2 rounded shadow-lg mb-4"><img src={KASH_QR_URL} className="w-48 h-48 object-contain"/></div>
                                     </div>
                                 )}
-
-                                {data.method === 'Transferencia' && (
-                                    <div className="animate-fade-in">
+                                {paymentMethod === 'Transferencia' && (
+                                    <div className="animate-fade-in text-center">
                                         <p className="text-neutral-500 text-[10px] uppercase mb-1">CUENTA BAC (Córdobas)</p>
-                                        <div className="text-xl md:text-2xl text-[#ccff00] font-mono font-bold mb-4 break-all bg-black/50 p-2 border border-[#333] rounded">
-                                            {BANK_ACCOUNT}
-                                        </div>
-                                        <Button onClick={copyToClipboard} variant="outline" className="w-full py-2 text-xs h-10 border-neutral-700">
-                                            {copied ? <span className="flex items-center gap-2"><Icon name="check" size={14}/> COPIADO</span> : <span className="flex items-center gap-2"><Icon name="copy" size={14}/> COPIAR CUENTA</span>}
-                                        </Button>
+                                        <div className="text-xl text-[#ccff00] font-mono font-bold mb-4 bg-black/50 p-2 border border-[#333] rounded">{BANK_ACCOUNT}</div>
+                                        <Button onClick={copyToClipboard} variant="outline" className="w-full py-2 text-xs h-10 border-neutral-700">{copied ? "COPIADO" : "COPIAR CUENTA"}</Button>
                                     </div>
-                                )}
-                                
-                                {data.method === 'Efectivo' && (
-                                    <p className="text-neutral-300 text-sm italic">Prepara tu efectivo (C$ {data.cash || subtotal}) para cuando llegue el repartidor.</p>
                                 )}
                             </div>
-
                             <Button onClick={() => {
-                                let msg = `🎌 *PEDIDO ${orderId}* 🎌\n\n*Cliente:* ${data.name}\n*Pago:* ${data.method}\n*Total:* C$ ${formatPrice(subtotal)}\n\n*ITEMS:* ${cart.length}`;
+                                let msg = `🎌 *PEDIDO ${orderId}* 🎌\n\n*Cliente:* ${formData.name}\n*Dirección:* ${formData.detail} (${addressName})\n*Ubicación:* https://maps.google.com/?q=${destination.lat},${destination.lng}\n*Pago:* ${paymentMethod} ${paymentMethod === 'Efectivo' ? `(Paga con: ${cashAmount})` : ''}\n*Total:* C$ ${formatPrice(total)}\n\n*ITEMS:* ${cart.length}`;
                                 window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
                                 onFinish();
                             }} className="w-full mb-4">ENVIAR A WHATSAPP</Button>
-                            
-                            <Button onClick={onFinish} variant="outline" className="w-full">VOLVER A LA TIENDA</Button>
+                            <Button onClick={onFinish} variant="outline" className="w-full">VOLVER A TIENDA</Button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="min-h-screen pt-32 pb-12 px-4 bg-[#020202]">
-                    <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12">
-                        <div>
-                            <button onClick={onBack} className="mb-6 text-neutral-500 flex items-center gap-2 text-xs font-bold uppercase"><Icon name="arrow-left" size={14}/> VOLVER</button>
-                            <h1 className="text-3xl font-black font-logo uppercase mb-8">CHECKOUT</h1>
-                            <form onSubmit={handleSubmit} className="space-y-8">
-                                <div>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white border-b border-neutral-800 pb-2 mb-4">1. INFORMACIÓN DE ENVÍO</h3>
-                                    <div className="space-y-4">
-                                        <input className="shop-input" placeholder="Nombre Completo" value={data.name} onChange={e=>setData({...data, name:e.target.value})} required/>
-                                        <input className="shop-input" placeholder="WhatsApp" value={data.phone} onChange={e=>setData({...data, phone:e.target.value})} required/>
-                                        <input className="shop-input" placeholder="Dirección Exacta" value={data.address} onChange={e=>setData({...data, address:e.target.value})} required/>
-                                    </div>
+                <div className="min-h-screen pt-32 pb-12 px-4 bg-[#020202] animate-fade-in">
+                    <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <h1 className="text-3xl font-black font-logo text-white">CHECKOUT</h1>
+                                <button onClick={onBack} className="text-neutral-500 flex items-center gap-2 text-xs font-bold uppercase hover:text-[#ff003c]"><Icon name="x" size={14}/> CANCELAR</button>
+                            </div>
+                            
+                            <div className={`bg-[#0a0a0a] border transition-all duration-300 overflow-hidden relative ${step === 1 ? 'border-[#ff003c] shadow-[0_0_30px_rgba(255,0,60,0.15)] ring-1 ring-[#ff003c]' : 'border-[#333] opacity-60 grayscale'}`}>
+                                <div className="p-4 bg-[#111] border-b border-[#222] flex justify-between items-center">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-3"><span className="bg-[#ff003c] text-white w-6 h-6 flex items-center justify-center font-mono text-xs">1</span> UBICACIÓN DE ENTREGA</h3>
+                                    {step > 1 && <button onClick={() => setStep(1)} className="text-[10px] text-[#ccff00] font-bold uppercase hover:underline">EDITAR</button>}
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white border-b border-neutral-800 pb-2 mb-4">2. PAGO</h3>
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
-                                        {['Transferencia', 'Efectivo', 'Kash'].map(m => (
-                                            <button key={m} type="button" onClick={()=>setData({...data, method:m})} className={`p-4 border text-xs font-bold uppercase ${data.method===m ? 'border-[#ff003c] bg-[#ff003c]/10 text-white' : 'border-neutral-800 text-neutral-500'}`}>{m}</button>
+                                
+                                {step === 1 && (
+                                    <div className="p-6 animate-fade-in">
+                                        <div className="flex gap-2 mb-4">
+                                            <input type="text" placeholder="Buscar residencial, barrio, punto de referencia..." className="shop-input flex-1" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleSearch} />
+                                            <Button onClick={handleSearch} disabled={isSearching} className="px-6 py-0">{isSearching ? <Icon name="loader-2" className="animate-spin"/> : <Icon name="search"/>}</Button>
+                                        </div>
+                                        
+                                        {/* --- FIX: MAPA CUADRADO PARA FACILITAR SCROLL EN MOVIL --- */}
+                                        <div className="relative w-full aspect-square md:aspect-video bg-[#111] border border-[#333] group overflow-hidden">
+                                            <div ref={mapContainerRef} className="w-full h-full z-0" />
+                                            {!destination && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur text-white px-6 py-3 rounded-full text-xs font-bold z-[400] border border-[#ff003c] animate-bounce pointer-events-none shadow-lg flex items-center gap-2"><Icon name="map-pin" size={14}/> TOCA TU UBICACIÓN EN EL MAPA</div>}
+                                            {isCalculating && <div className="absolute inset-0 bg-black/80 z-[500] flex flex-col items-center justify-center text-[#ccff00] font-mono font-bold gap-3"><Icon name="loader-2" className="animate-spin" size={32}/>CALCULANDO RUTA...</div>}
+                                        </div>
+                                        
+                                        <div className="mt-6 flex justify-end">
+                                            <Button disabled={!destination || isCalculating} onClick={() => setStep(2)}>CONFIRMAR PUNTO <Icon name="arrow-right" size={16}/></Button>
+                                        </div>
+                                    </div>
+                                )}
+                                {step > 1 && <div className="p-4 bg-[#0a0a0a] flex items-center gap-3 text-xs text-neutral-400 border-t border-[#222]"><Icon name="check" size={14} className="text-[#ccff00]"/> {addressName}</div>}
+                            </div>
+
+                            <div className={`bg-[#0a0a0a] border transition-all duration-300 ${step === 2 ? 'border-[#ff003c] shadow-[0_0_30px_rgba(255,0,60,0.15)] ring-1 ring-[#ff003c]' : 'border-[#333] opacity-60'}`}>
+                                <div className="p-4 bg-[#111] border-b border-[#222] flex justify-between items-center">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-3"><span className={`w-6 h-6 flex items-center justify-center font-mono text-xs ${step===2 ? 'bg-[#ff003c] text-white' : 'bg-[#333] text-neutral-500'}`}>2</span> DATOS PERSONALES</h3>
+                                    {step > 2 && <button onClick={() => setStep(2)} className="text-[10px] text-[#ccff00] font-bold uppercase hover:underline">EDITAR</button>}
+                                </div>
+                                {step === 2 && (
+                                    <div className="p-6 space-y-4 animate-fade-in">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div className="space-y-1"><label className="text-[10px] text-neutral-500 font-bold uppercase">NOMBRE COMPLETO</label><input className="shop-input" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] text-neutral-500 font-bold uppercase">WHATSAPP</label><input className="shop-input" maxLength={8} value={formData.phone} onChange={e=>setFormData({...formData, phone:e.target.value.replace(/\D/g,'')})} /></div>
+                                        </div>
+                                        <div className="space-y-1"><label className="text-[10px] text-neutral-500 font-bold uppercase">DIRECCIÓN EXACTA (COLOR CASA, PORTÓN, SEÑAS)</label><textarea className="shop-input" rows="3" value={formData.detail} onChange={e=>setFormData({...formData, detail:e.target.value})} /></div>
+                                        <div className="flex justify-end mt-4"><Button disabled={!formData.name || formData.phone.length<8 || !formData.detail} onClick={() => setStep(3)}>CONTINUAR <Icon name="arrow-right" size={16}/></Button></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className={`bg-[#0a0a0a] border transition-all duration-300 ${step === 3 ? 'border-[#ff003c] shadow-[0_0_30px_rgba(255,0,60,0.15)] ring-1 ring-[#ff003c]' : 'border-[#333] opacity-60'}`}>
+                                <div className="p-4 bg-[#111] border-b border-[#222]">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-3"><span className={`w-6 h-6 flex items-center justify-center font-mono text-xs ${step===3 ? 'bg-[#ff003c] text-white' : 'bg-[#333] text-neutral-500'}`}>3</span> MÉTODO DE PAGO</h3>
+                                </div>
+                                {step === 3 && (
+                                    <div className="p-6 animate-fade-in">
+                                        <div className="grid grid-cols-3 gap-4 mb-6">
+                                            {['Transferencia', 'Efectivo', 'Kash'].map(m => (
+                                                <button key={m} onClick={()=>setPaymentMethod(m)} className={`p-4 border text-xs font-bold uppercase transition-all h-24 flex flex-col items-center justify-center gap-2 ${paymentMethod===m ? 'border-[#ff003c] bg-[#ff003c]/10 text-white' : 'border-[#333] text-neutral-500 hover:border-white hover:bg-[#111]'}`}>
+                                                    <Icon name={m==='Efectivo' ? 'banknote' : m==='Transferencia' ? 'credit-card' : 'smartphone'} size={20}/>
+                                                    {m}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {paymentMethod === 'Efectivo' && (
+                                            <div className="animate-slide-up bg-[#111] p-4 border border-[#333]">
+                                                <label className="text-[10px] text-[#ccff00] font-bold uppercase mb-2 block">¿Con cuánto vas a pagar? (Para el cambio)</label>
+                                                <input className="shop-input" placeholder="Ej: 500, 1000..." value={cashAmount} onChange={e => setCashAmount(e.target.value)} />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-4">
+                            <div className="bg-[#0a0a0a] border border-[#222] sticky top-24 shadow-2xl">
+                                <div className="p-4 bg-[#111] border-b border-[#222]"><h3 className="text-sm font-bold uppercase tracking-widest text-white">RESUMEN DE ORDEN</h3></div>
+                                <div className="p-6">
+                                    <div className="space-y-4 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
+                                        {cart.map((i, idx) => (
+                                            <div key={idx} className="flex gap-4 items-center">
+                                                <div className="w-12 h-16 bg-[#111] border border-[#333]"><img src={i.image} className="w-full h-full object-cover"/></div>
+                                                <div className="flex-1"><h4 className="text-[10px] font-bold text-white line-clamp-1">{i.name}</h4><p className="text-[9px] text-neutral-500">TALLA {i.size} / CANT. {i.qty}</p></div>
+                                                <p className="text-xs font-mono text-white">C$ {formatPrice(i.price * i.qty)}</p>
+                                            </div>
                                         ))}
                                     </div>
-                                    {data.method === 'Efectivo' && <input className="shop-input" placeholder="¿Con cuánto pagas?" value={data.cash} onChange={e=>setData({...data, cash:e.target.value})} required/>}
-                                </div>
-                            </form>
-                        </div>
-                        <div className="bg-[#0a0a0a] border border-[#222] p-8 h-fit md:sticky md:top-24">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-6">RESUMEN</h3>
-                            <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
-                                {cart.map((i, idx) => (
-                                    <div key={idx} className="flex gap-4 items-center">
-                                        <div className="w-12 h-16 bg-[#111] relative"><img src={i.image} className="w-full h-full object-cover"/></div>
-                                        <div className="flex-1"><h4 className="text-xs font-bold text-white line-clamp-1">{i.name}</h4><p className="text-[10px] text-neutral-500">{i.size} x{i.qty}</p></div>
-                                        <p className="text-xs font-mono">C$ {formatPrice(i.price * i.qty)}</p>
+                                    
+                                    <div className="space-y-2 text-xs font-mono text-neutral-400 border-t border-[#333] pt-4">
+                                        <div className="flex justify-between"><span>SUBTOTAL</span><span>C$ {formatPrice(subtotal)}</span></div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="flex items-center gap-1"><Icon name="truck" size={12}/> ENVÍO {distance > 0 && <span className="bg-[#222] text-white px-1 ml-1">{distance.toFixed(1)}km</span>}</span>
+                                            
+                                            {/* --- FIX: CORREGIDO EL ERROR DE VISUALIZACIÓN DEL COSTO --- */}
+                                            <span className={shippingCost > 0 ? 'text-[#ccff00]' : ''}>
+                                                {shippingCost > 0 ? `C$ ${formatPrice(shippingCost)}` : '--'}
+                                            </span>
+                                        </div>
                                     </div>
-                                ))}
+
+                                    <div className="flex justify-between text-white font-bold text-xl pt-6 border-t border-[#333] mt-4 mb-6">
+                                        <span>TOTAL</span><span>C$ {formatPrice(total)}</span>
+                                    </div>
+
+                                    <Button 
+                                        disabled={step < 3 || !paymentMethod || (paymentMethod === 'Efectivo' && !cashAmount)} 
+                                        onClick={confirmOrder} 
+                                        className="w-full text-sm py-5"
+                                    >
+                                        FINALIZAR PEDIDO
+                                    </Button>
+                                    
+                                    <p className="text-[9px] text-center text-neutral-600 mt-4 font-mono uppercase">Envíos calculados desde Managua, Nicaragua.</p>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-white font-bold text-lg pt-4 border-t border-[#222] mt-4"><span>TOTAL</span><span>C$ {formatPrice(subtotal)}</span></div>
-                            <Button onClick={handleSubmit} className="w-full mt-6 text-lg">FINALIZAR PEDIDO</Button>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        // --- 4. MAIN APP ---
+        // --- MAIN APP ---
         const App = () => {
             const [view, setView] = useState('home');
             const [products, setProducts] = useState([]);
@@ -463,16 +749,22 @@
             const [selectedProduct, setSelectedProduct] = useState(null);
             const [isCartOpen, setIsCartOpen] = useState(false);
             const [toast, setToast] = useState({ show: false, msg: '' });
+            const [criticalError, setCriticalError] = useState(null); 
 
             useEffect(() => {
                 const loadData = async () => {
-                    if (isFirebaseActive) {
+                    if (isFirebaseActive && db) {
                         try {
                             const snap = await db.collection('products').orderBy('createdAt', 'desc').get();
                             if (!snap.empty) setProducts(snap.docs.map(d => ({id:d.id, ...d.data()})));
                             else setProducts(MOCK_PRODUCTS);
-                        } catch (e) { setProducts(MOCK_PRODUCTS); }
-                    } else { setProducts(MOCK_PRODUCTS); }
+                        } catch (e) { 
+                            console.error("Error cargando productos:", e);
+                            setProducts(MOCK_PRODUCTS); 
+                        }
+                    } else { 
+                        setProducts(MOCK_PRODUCTS); 
+                    }
                 };
                 loadData();
                 const saved = localStorage.getItem('kura_cart');
@@ -487,13 +779,13 @@
                 setTimeout(() => setToast({ show: false, msg: '' }), 3000);
             };
 
-            const addToCart = (product, size) => {
+            const addToCart = (product, size, qty) => {
                 setCart(prev => {
                     const exists = prev.find(i => i.id === product.id && i.size === size);
-                    if (exists) return prev.map(i => i.id === product.id && i.size === size ? { ...i, qty: i.qty + 1 } : i);
-                    return [...prev, { ...product, size, qty: 1 }];
+                    if (exists) return prev.map(i => i.id === product.id && i.size === size ? { ...i, qty: i.qty + qty } : i);
+                    return [...prev, { ...product, size, qty }];
                 });
-                showToast(`${product.name} AGREGADO`);
+                showToast(`${qty}x ${product.name} AGREGADO`);
                 setView('home');
             };
 
@@ -501,8 +793,43 @@
 
             const cartTotal = cart.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
 
+            const CartDrawer = ({ isOpen, onClose, cart, remove, onCheckout }) => {
+                if (!isOpen) return null;
+                const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+                return (
+                    <div className="fixed inset-0 z-[100] flex justify-end">
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+                        <div className="relative w-full max-w-md bg-[#050505] border-l border-[#222] h-full flex flex-col shadow-2xl animate-fade-in">
+                            <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#0a0a0a]">
+                                <h2 className="font-logo font-bold text-xl uppercase text-white">CARRITO ({cart.length})</h2>
+                                <button onClick={onClose} className="hover:text-[#ff003c] transition-colors"><Icon name="x" size={24}/></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                {cart.length === 0 ? <div className="text-center mt-20 text-neutral-600 font-mono">VACÍO</div> : cart.map((item, i) => (
+                                    <div key={i} className="flex gap-4 bg-[#0a0a0a] p-3 border border-[#222] relative">
+                                        <img src={item.image} className="w-20 h-24 object-cover grayscale"/>
+                                        <div className="flex flex-col justify-between py-1">
+                                            <div><h4 className="font-bold text-white text-sm uppercase">{item.name}</h4><span className="text-xs font-mono text-neutral-500">TALLA {item.size} / x{item.qty}</span></div>
+                                            <span className="text-[#ccff00] font-mono font-bold">C$ {formatPrice(item.price)}</span>
+                                        </div>
+                                        <button onClick={() => remove(i)} className="absolute top-2 right-2 text-neutral-600 hover:text-[#ff003c]"><Icon name="trash-2" size={16}/></button>
+                                    </div>
+                                ))}
+                            </div>
+                            {cart.length > 0 && (
+                                <div className="p-6 border-t border-[#222] bg-[#0a0a0a]">
+                                    <div className="flex justify-between items-end mb-6 font-mono"><span className="text-neutral-500 text-sm">TOTAL</span><span className="text-2xl font-bold text-white">C$ {formatPrice(total)}</span></div>
+                                    <Button className="w-full" onClick={onCheckout}>PAGAR AHORA</Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
             return (
                 <div className="min-h-screen flex flex-col">
+                    <CriticalErrorBanner error={criticalError} onClose={() => setCriticalError(null)} />
                     <Marquee />
                     <Toast show={toast.show} message={toast.msg} />
                     
@@ -553,7 +880,7 @@
                         )}
 
                         {view === 'checkout' && (
-                            <Checkout cart={cart} subtotal={cartTotal} onBack={() => setView('home')} onFinish={() => { setCart([]); setView('home'); }} />
+                            <SmartCheckout cart={cart} subtotal={cartTotal} onBack={() => setView('home')} onFinish={() => { setCart([]); setView('home'); }} setCriticalError={setCriticalError} />
                         )}
                     </main>
 

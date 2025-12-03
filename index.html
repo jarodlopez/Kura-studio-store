@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kura Studio | Anime, fan art</title>
+    
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FUENTES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- LIBRERÍAS REACT (Versión Estable) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- FIREBASE (Versión Compatibilidad) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- ESTILOS -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; margin: 0; padding: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-cyber { font-family: 'Orbitron', sans-serif; }
+        .font-rounded { font-family: 'Quicksand', sans-serif; }
+        
+        /* Animaciones */
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from{opacity:0; transform: translateY(10px);} to{opacity:1; transform: translateY(0);} }
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+        .animate-bounce-slow { animation: bounce-slow 2s infinite; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        
+        /* Fix Chrome Autofill Fondo Blanco */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+            -webkit-text-fill-color: white !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- 1. CONFIGURACIÓN ---
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = ReactDOM;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAztg4F0twRi2NOP8MayAOUYB0ZtHgkss0",
+            authDomain: "kodialabsnic.firebaseapp.com",
+            databaseURL: "https://kodialabsnic-default-rtdb.firebaseio.com",
+            projectId: "kodialabsnic",
+            storageBucket: "kodialabsnic.firebasestorage.app",
+            messagingSenderId: "740746852984",
+            appId: "1:740746852984:web:972aa34592aef881630b8d"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const PHONE_NUMBER = "+50587091008"; 
+        const INSTAGRAM_URL = "https://www.instagram.com/kurastudio_nic?igsh=MTR3bnJtb3lvc3U3ZA=="; 
+        const BANK_ACCOUNT = "BAC: 123456789 - Kura Studio";
+        const KASH_QR_URL = "https://raw.githubusercontent.com/jarodlopez/Kura-studio-/refs/heads/main/IMG-20251203-WA0009.jpg";
+
+        // --- 2. ICONOS SVG (INCRUSTADOS PARA EVITAR ERRORES) ---
+        const Icons = {
+            Menu: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>,
+            X: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>,
+            ShoppingBag: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+            Settings: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+            Trash2: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+            ChevronLeft: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
+            ChevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+            Ruler: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>,
+            Instagram: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>,
+            Phone: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+            Check: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>,
+            Copy: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>,
+            Banknote: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>,
+            QrCode: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>,
+            Plus: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+            Eye: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+            FileSpreadsheet: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>,
+            ToggleLeft: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="6" ry="6"/><circle cx="8" cy="12" r="2"/></svg>,
+            ToggleRight: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="6" ry="6"/><circle cx="16" cy="12" r="2"/></svg>,
+            ArrowRight: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>,
+            MessageCircle: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        };
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icon = Icons[name];
+            if (!icon) return null;
+            return React.cloneElement(icon, { width: size, height: size, className });
+        };
+
+        // --- 3. COMPONENTES UI ---
+        const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false, iconName, type="button" }) => {
+            const baseStyle = "px-6 py-3 font-mono text-xs font-bold tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed";
+            const variants = {
+                primary: "bg-[#E60033] text-white hover:bg-[#b30027]",
+                secondary: "bg-white text-black hover:bg-neutral-200",
+                outline: "border border-neutral-700 text-white hover:border-white hover:bg-white/5",
+                ghost: "text-neutral-400 hover:text-white"
+            };
+            return (
+                <button type={type} onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                    {children} {iconName && <Icon name={iconName} size={16} />}
+                </button>
+            );
+        };
+
+        const Input = ({ label, ...props }) => (
+            <div className="mb-4">
+                <label className="block text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
+                <input className="w-full bg-[#0a0a0a] border border-neutral-800 text-white p-3 text-sm focus:border-[#E60033] focus:outline-none transition-colors placeholder-neutral-700 font-mono" {...props} />
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-[#0a0a0a] border border-neutral-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-[#E60033] z-20"><Icon name="X" size={24}/></button>
+                        <div className="p-6 border-b border-neutral-800 sticky top-0 bg-[#0a0a0a] z-10">
+                            <h3 className="text-white font-bold uppercase tracking-widest font-cyber text-lg text-center">{title}</h3>
+                        </div>
+                        <div className="p-6">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 4. COMPONENTES DE VISTA ---
+
+        const AdminView = ({ setView }) => {
+            const [tab, setTab] = useState('products');
+            const [products, setProducts] = useState([]);
+            const [orders, setOrders] = useState([]);
+            const [config, setConfig] = useState({ bannerActive: false, bannerImage: '' });
+            const [isEditing, setIsEditing] = useState(false);
+            const [formData, setFormData] = useState({ name: '', category: '', price: '', image: '', description: '', sizes: 'S,M,L,XL' });
+            const [editId, setEditId] = useState(null);
+            const [selectedOrder, setSelectedOrder] = useState(null);
+
+            useEffect(() => {
+                const unsubProd = db.collection('products').onSnapshot(s => setProducts(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubOrd = db.collection('orders').orderBy('date','desc').onSnapshot(s => setOrders(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                db.collection('settings').doc('config').get().then(doc => doc.exists && setConfig(doc.data()));
+                return () => { unsubProd(); unsubOrd(); };
+            }, []);
+
+            const handleSaveProduct = async (e) => {
+                e.preventDefault();
+                const data = { ...formData, price: Number(formData.price), sizes: formData.sizes.split(','), updatedAt: new Date() };
+                try {
+                    if (editId) await db.collection('products').doc(editId).update(data);
+                    else await db.collection('products').add({ ...data, createdAt: new Date() });
+                    setIsEditing(false);
+                } catch (e) { alert("Error: " + e.message); }
+            };
+
+            const handleDelete = async (id) => { if(confirm("¿Eliminar?")) await db.collection('products').doc(id).delete(); };
+            const handleConfig = async () => { await db.collection('settings').doc('config').set(config); alert("Guardado"); };
+
+            return (
+                <div className="pt-24 px-4 pb-12 max-w-7xl mx-auto min-h-screen">
+                    <Modal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} title={`Orden ${selectedOrder?.orderId}`}>
+                        <div className="space-y-4">
+                            <div className="bg-neutral-900 p-4 border border-neutral-800">
+                                <h4 className="text-[#E60033] font-bold text-xs uppercase mb-2">Cliente</h4>
+                                <p className="text-white font-bold">{selectedOrder?.customer?.name}</p>
+                                <p className="text-neutral-400 text-sm">{selectedOrder?.customer?.phone}</p>
+                                <p className="text-neutral-400 text-sm">{selectedOrder?.customer?.address}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-[#E60033] font-bold text-xs uppercase mb-2">Items</h4>
+                                {selectedOrder?.items?.map((item,i) => (
+                                    <div key={i} className="flex justify-between py-2 border-b border-neutral-800">
+                                        <div><p className="text-white text-sm">{item.name}</p><p className="text-neutral-500 text-xs">Talla: {item.size}</p></div>
+                                        <p className="text-white text-sm">x{item.quantity}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-between font-bold text-white border-t border-neutral-700 pt-2"><span>Total</span><span>C$ {selectedOrder?.total}</span></div>
+                            <div className="bg-neutral-800/50 p-2 text-center text-xs"><p>Pago: {selectedOrder?.method}</p>{selectedOrder?.method==='cash' && <p>Efectivo: {selectedOrder?.cashDetail}</p>}</div>
+                        </div>
+                    </Modal>
+
+                    <div className="flex justify-between items-center mb-8 border-b border-neutral-800 pb-4">
+                        <h1 className="text-2xl font-bold text-white uppercase font-cyber">Kura Admin</h1>
+                        <Button variant="outline" onClick={() => setView('home')}>Salir</Button>
+                    </div>
+
+                    <div className="flex gap-4 mb-8">
+                        <button onClick={()=>setTab('products')} className={`text-sm font-bold uppercase pb-2 ${tab==='products'?'text-[#E60033] border-b-2 border-[#E60033]':'text-neutral-500'}`}>Inventario</button>
+                        <button onClick={()=>setTab('orders')} className={`text-sm font-bold uppercase pb-2 ${tab==='orders'?'text-[#E60033] border-b-2 border-[#E60033]':'text-neutral-500'}`}>Ventas</button>
+                        <button onClick={()=>setTab('config')} className={`text-sm font-bold uppercase pb-2 ${tab==='config'?'text-[#E60033] border-b-2 border-[#E60033]':'text-neutral-500'}`}>Config</button>
+                    </div>
+
+                    {tab === 'products' && (
+                        <>
+                            <Button onClick={() => { setIsEditing(true); setFormData({name:'',category:'',price:'',image:'',description:'',sizes:'S,M,L,XL'}); setEditId(null); }} className="mb-6" iconName="Plus">Nuevo Producto</Button>
+                            {isEditing && (
+                                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+                                    <form onSubmit={handleSaveProduct} className="bg-neutral-900 p-6 max-w-lg w-full border border-neutral-700 space-y-4 max-h-[90vh] overflow-y-auto">
+                                        <h3 className="text-white font-bold">Gestión Producto</h3>
+                                        <Input label="Nombre" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} required/>
+                                        <Input label="Categoría" value={formData.category} onChange={e=>setFormData({...formData, category:e.target.value})} required/>
+                                        <Input label="Precio C$" type="number" value={formData.price} onChange={e=>setFormData({...formData, price:e.target.value})} required/>
+                                        <Input label="Imagen URL" value={formData.image} onChange={e=>setFormData({...formData, image:e.target.value})} required/>
+                                        <Input label="Tallas" value={formData.sizes} onChange={e=>setFormData({...formData, sizes:e.target.value})}/>
+                                        <div className="mb-4"><label className="block text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-2">Descripción</label><textarea className="w-full bg-[#0a0a0a] border border-neutral-800 text-white p-3 text-sm focus:border-[#E60033] outline-none h-24" value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})}></textarea></div>
+                                        <div className="flex gap-2"><Button type="submit">Guardar</Button><Button variant="outline" onClick={()=>setIsEditing(false)}>Cancelar</Button></div>
+                                    </form>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {products.map(p => (
+                                    <div key={p.id} className="bg-neutral-900 p-3 border border-neutral-800">
+                                        <img src={p.image} className="aspect-square object-cover mb-2 w-full bg-neutral-800" />
+                                        <p className="font-bold text-xs truncate">{p.name}</p>
+                                        <p className="text-[#E60033] text-xs">C$ {p.price}</p>
+                                        <div className="flex gap-2 mt-2"><button onClick={() => { setFormData({...p, sizes: p.sizes.join(',')}); setEditId(p.id); setIsEditing(true); }} className="text-[10px] underline">Editar</button><button onClick={() => handleDelete(p.id)} className="text-[10px] text-red-500 underline">Borrar</button></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {tab === 'orders' && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm text-neutral-400">
+                                <thead className="bg-neutral-900 text-white text-xs uppercase"><tr><th className="p-3">ID</th><th className="p-3">Cliente</th><th className="p-3">Total</th><th className="p-3">Ver</th></tr></thead>
+                                <tbody className="divide-y divide-neutral-800">{orders.map(o => (<tr key={o.id}><td className="p-3 text-[#E60033]">{o.orderId}</td><td className="p-3">{o.customer?.name}</td><td className="p-3">C$ {o.total}</td><td className="p-3"><button onClick={()=>setSelectedOrder(o)}><Icon name="Eye" size={16}/></button></td></tr>))}</tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {tab === 'config' && (
+                        <div className="max-w-md bg-neutral-900 p-6 border border-neutral-800">
+                            <h3 className="text-white font-bold mb-4">Banner Pop-up</h3>
+                            <div className="flex items-center gap-4 mb-4"><span className="text-sm">Activar</span><button onClick={()=>setConfig({...config, bannerActive: !config.bannerActive})} className="text-[#E60033]"><Icon name={config.bannerActive ? "ToggleRight" : "ToggleLeft"} size={32}/></button></div>
+                            <Input label="URL Imagen" value={config.bannerImage} onChange={e=>setConfig({...config, bannerImage:e.target.value})} />
+                            <Button onClick={handleConfig}>Guardar</Button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const CheckoutView = ({ cart, cartTotal, setCart, setView }) => {
+            const [step, setStep] = useState(1);
+            const [loading, setLoading] = useState(false);
+            const [formData, setFormData] = useState({ name: '', phone: '', address: '', city: 'Managua' });
+            const [paymentMethod, setPaymentMethod] = useState('');
+            const [cashAmount, setCashAmount] = useState('');
+            const [orderId, setOrderId] = useState(null);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if(!paymentMethod) return alert("Selecciona pago");
+                setLoading(true);
+                const newId = `ORD-${Date.now().toString().slice(-6)}`;
+                setOrderId(newId);
+                await db.collection('orders').add({ orderId: newId, customer: formData, items: cart, total: cartTotal, date: new Date(), method: paymentMethod, cashDetail: cashAmount, status: 'pending' });
+                setStep(2); setLoading(false);
+            };
+
+            const handleFinish = () => {
+                let msg = `🎌 *KURA STUDIO - PEDIDO #${orderId}* 🎌\n\n*Cliente:* ${formData.name}\n*Pago:* ${paymentMethod.toUpperCase()}\n*Dirección:* ${formData.address}\n\n*ITEMS:*\n${cart.map(i => `▪ ${i.quantity}x ${i.name} [${i.size}]`).join('\n')}\n\n*TOTAL: C$ ${cartTotal.toFixed(2)}*`;
+                if(paymentMethod==='cash') msg += `\n*Pago con:* ${cashAmount}`; else msg += `\nAdjunto comprobante.`;
+                window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+                setCart([]); setView('home');
+            };
+
+            if (step === 1) {
+                return (
+                    <div className="pt-24 pb-12 px-4 max-w-xl mx-auto min-h-screen">
+                        <button onClick={()=>setView('home')} className="mb-6 flex items-center gap-2 text-neutral-500 text-xs uppercase tracking-widest"><Icon name="ChevronLeft" size={14}/> Volver</button>
+                        <h1 className="text-2xl font-bold font-cyber mb-6 uppercase">Checkout</h1>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="bg-[#0a0a0a] p-6 border border-neutral-800">
+                                <h3 className="text-sm font-bold uppercase mb-4 text-[#E60033]">1. Datos</h3>
+                                <Input label="Nombre" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} required/>
+                                <Input label="WhatsApp" value={formData.phone} onChange={e=>setFormData({...formData, phone:e.target.value})} required/>
+                                <Input label="Dirección" value={formData.address} onChange={e=>setFormData({...formData, address:e.target.value})} required/>
+                            </div>
+                            <div className="bg-[#0a0a0a] p-6 border border-neutral-800">
+                                <h3 className="text-sm font-bold uppercase mb-4 text-[#E60033]">2. Pago</h3>
+                                <div className="grid grid-cols-3 gap-2 mb-4">
+                                    {[ {id:'transfer', icon:'Banknote', label:'Transf.'}, {id:'cash', icon:'Banknote', label:'Efectivo'}, {id:'kash', icon:'QrCode', label:'Kash'} ].map(m => (
+                                        <button key={m.id} type="button" onClick={()=>setPaymentMethod(m.id)} className={`p-3 border text-center flex flex-col items-center gap-2 ${paymentMethod===m.id?'border-[#E60033] bg-[#E60033]/10':'border-neutral-800 text-neutral-500'}`}><Icon name={m.icon} size={20}/><span className="text-[10px] uppercase font-bold">{m.label}</span></button>
+                                    ))}
+                                </div>
+                                {paymentMethod === 'cash' && <Input label="¿Con cuánto pagas?" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} required placeholder="Ej: 500"/>}
+                            </div>
+                            <div className="bg-[#0a0a0a] p-4 border border-neutral-800 flex justify-between items-center sticky bottom-0 z-10"><p className="text-xl font-bold font-mono">C$ {cartTotal.toFixed(2)}</p><Button type="submit" disabled={loading} iconName="ArrowRight">{loading?'...':'Confirmar'}</Button></div>
+                        </form>
+                    </div>
+                );
+            }
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black px-4">
+                    <div className="max-w-md w-full bg-[#0a0a0a] border border-neutral-800 p-8 text-center">
+                        <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="Check" className="text-white"/></div>
+                        <h2 className="text-xl font-bold uppercase font-cyber">Orden Creada</h2>
+                        <p className="text-[#E60033] font-mono mt-1 text-lg mb-6">{orderId}</p>
+                        <div className="bg-[#0f0f0f] p-4 mb-6 border border-neutral-800">
+                            {paymentMethod==='transfer' && <div className="flex justify-between bg-neutral-900 p-2"><p className="text-xs truncate mr-2">{BANK_ACCOUNT}</p><button onClick={()=>{navigator.clipboard.writeText(BANK_ACCOUNT);alert("Copiado")}}><Icon name="Copy" size={14}/></button></div>}
+                            {paymentMethod==='kash' && <img src={KASH_QR_URL} className="w-32 h-32 object-contain mx-auto bg-white p-2"/>}
+                            {paymentMethod==='cash' && <p className="text-sm">Prepara: {cashAmount}</p>}
+                        </div>
+                        <Button onClick={handleFinish} className="w-full bg-green-600" iconName="MessageCircle">WhatsApp</Button>
+                        <p className="text-[10px] text-neutral-500 mt-4">Una vez verificado el pago se iniciará su orden.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const ProductDetail = ({ product, addToCart, setView }) => {
+            const [size, setSize] = useState('M');
+            const [showSizes, setShowSizes] = useState(false);
+            const sizes = product.sizes ? product.sizes : ['S','M','L','XL'];
+            
+            const SizeGuideTable = () => (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-center border-collapse">
+                        <thead>
+                            <tr className="border-b border-neutral-700">
+                                <th className="p-3 text-white font-bold uppercase text-xs tracking-wider bg-neutral-900/50">Tallas</th>
+                                <th className="p-3 text-[#E60033] font-bold uppercase text-xs tracking-wider bg-neutral-900/50">XS</th>
+                                <th className="p-3 text-[#E60033] font-bold uppercase text-xs tracking-wider bg-neutral-900/50">S</th>
+                                <th className="p-3 text-[#E60033] font-bold uppercase text-xs tracking-wider bg-neutral-900/50">M</th>
+                                <th className="p-3 text-[#E60033] font-bold uppercase text-xs tracking-wider bg-neutral-900/50">L</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-neutral-400 text-sm font-mono">
+                            {[
+                                ["Pecho", "42", "47", "52", "58"],
+                                ["Hombro a hombro", "45", "49", "54.5", "57.4"],
+                                ["Largo total", "69", "70", "73.5", "76"],
+                                ["Abertura Manga", "18", "19", "22", "22.2"],
+                                ["Largo Manga", "22", "23", "25", "26"],
+                                ["Ancho cuello", "3", "3", "3", "3"],
+                                ["Prof. Escote", "9", "10", "11", "12"]
+                            ].map((row, i) => (
+                                <tr key={i} className="border-b border-neutral-800 hover:bg-neutral-900/30">
+                                    <td className="p-3 text-white font-bold text-left pl-6">{row[0]}</td>
+                                    <td className="p-3">{row[1]}</td>
+                                    <td className="p-3">{row[2]}</td>
+                                    <td className="p-3">{row[3]}</td>
+                                    <td className="p-3">{row[4]}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <p className="text-[10px] text-neutral-600 mt-4 text-center uppercase tracking-widest">* Medidas en Centímetros (CM)</p>
+                </div>
+            );
+
+            return (
+                <div className="pt-28 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
+                    <Modal isOpen={showSizes} onClose={() => setShowSizes(false)} title="Tallas"><SizeGuideTable /></Modal>
+                    <button onClick={() => setView('home')} className="mb-6 flex items-center gap-2 text-neutral-500 text-xs uppercase tracking-widest"><Icon name="ChevronLeft" size={14}/> Volver</button>
+                    <div className="grid md:grid-cols-2 gap-12">
+                        <div className="aspect-[4/5] bg-neutral-900 border border-neutral-800 overflow-hidden"><img src={product.image} className="w-full h-full object-cover" /></div>
+                        <div className="flex flex-col justify-center">
+                            <h2 className="text-[#E60033] font-mono text-xs mb-2 tracking-widest uppercase">{product.category}</h2>
+                            <h1 className="text-4xl md:text-5xl font-black mb-4 uppercase italic tracking-tighter">{product.name}</h1>
+                            <p className="text-3xl font-mono font-bold mb-6">C$ {product.price}</p>
+                            <p className="text-neutral-400 font-light mb-8 text-sm leading-relaxed">{product.description || 'Sin descripción'}</p>
+                            <div className="bg-[#0f0f0f] border border-neutral-800 p-6 mb-8">
+                                <div className="flex justify-between items-center mb-4"><span className="text-xs font-bold uppercase flex items-center gap-2"><Icon name="Ruler" size={14}/> Talla</span><button onClick={() => setShowSizes(true)} className="text-[10px] text-[#E60033] underline">VER Guía DE TALLAS </button></div>
+                                <div className="flex gap-2 flex-wrap">{sizes.map(s => (<button key={s} onClick={() => setSize(s)} className={`w-12 h-12 border font-mono text-sm ${size===s?'bg-white text-black border-white font-bold':'border-neutral-700 text-neutral-500'}`}>{s}</button>))}</div>
+                            </div>
+                            <Button onClick={() => addToCart(product, size)} className="w-full py-5">AGREGAR</Button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 5. APP ---
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [cart, setCart] = useState([]);
+            const [isCartOpen, setIsCartOpen] = useState(false);
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [view, setView] = useState("home"); 
+            const [selectedProduct, setSelectedProduct] = useState(null);
+            const [products, setProducts] = useState([]);
+            const [showBanner, setShowBanner] = useState(false);
+            const [bannerConfig, setBannerConfig] = useState(null);
+
+            useEffect(() => {
+                auth.onAuthStateChanged(u => { if(u) setUser(u); else auth.signInAnonymously(); });
+                db.collection('products').onSnapshot(s => setProducts(s.docs.map(d=>({id:d.id,...d.data()}))));
+                db.collection('settings').doc('config').get().then(d => { if(d.exists) { setBannerConfig(d.data()); if(d.data().bannerActive) setTimeout(()=>setShowBanner(true), 1500); }});
+                const saved = localStorage.getItem('kuraCart');
+                if(saved) setCart(JSON.parse(saved));
+                if(window.location.hash === '#admin') setView('admin');
+            }, []);
+
+            useEffect(() => { localStorage.setItem('kuraCart', JSON.stringify(cart)) }, [cart]);
+            useEffect(() => { window.scrollTo(0,0) }, [view, selectedProduct]);
+
+            const addToCart = (p, s) => {
+                setCart(prev => {
+                    const exist = prev.find(i => i.id === p.id && i.size === s);
+                    return exist ? prev.map(i => i.id === p.id && i.size === s ? {...i, quantity: i.quantity+1} : i) : [...prev, {...p, size:s, quantity:1}];
+                });
+                setIsCartOpen(true);
+            };
+
+            const cartTotal = cart.reduce((t,i) => t + (Number(i.price)*i.quantity), 0);
+
+            if(view === 'admin') return <AdminView setView={setView} />;
+            if(view === 'checkout') return <CheckoutView cart={cart} cartTotal={cartTotal} setCart={setCart} setView={setView} />;
+
+            return (
+                <div className="min-h-screen bg-[#050505] text-white">
+                    {/* NAVBAR */}
+                    <nav className="fixed top-0 w-full z-40 bg-black/90 backdrop-blur-md border-b border-neutral-900 h-20">
+                        <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between relative">
+                            <div className="flex items-center">
+                                <button onClick={()=>setIsMenuOpen(!isMenuOpen)} className="p-2 hover:text-[#E60033]"><Icon name="Menu" size={24}/></button>
+                                {isMenuOpen && (
+                                    <div className="absolute top-20 left-0 bg-[#0a0a0a] border border-neutral-800 p-4 w-48 shadow-xl animate-fade-in z-50">
+                                        <button onClick={()=>{setView('admin');setIsMenuOpen(false)}} className="flex items-center gap-2 text-xs font-bold uppercase text-neutral-400 hover:text-white"><Icon name="Settings" size={14}/> Admin</button>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* LOGO MODIFICADO: JAPONÉS HORIZONTAL ABAJO */}
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer group text-center flex flex-col items-center" onClick={()=>setView('home')}>
+                                 <h1 className="font-cyber font-black text-2xl tracking-widest uppercase italic leading-none" style={{textShadow: '0 0 15px rgba(230, 0, 51, 0.5)'}}>
+                                    KURA<span className="text-neutral-600">STUDIO</span>
+                                </h1>
+                                <span className="text-[#E60033] font-bold text-[10px] tracking-[0.4em] uppercase opacity-80 mt-1">クラスタジオ</span>
+                            </div>
+
+                            <button onClick={()=>setIsCartOpen(true)} className="relative p-2 group"><Icon name="ShoppingBag" size={24} className="group-hover:text-[#E60033]"/>{cart.length>0 && <span className="absolute top-0 right-0 bg-[#E60033] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold">{cart.length}</span>}</button>
+                        </div>
+                    </nav>
+
+                    {/* CART DRAWER */}
+                    {isCartOpen && (
+                        <div className="fixed inset-0 z-50 flex justify-end">
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={()=>setIsCartOpen(false)}></div>
+                            <div className="relative w-full max-w-md bg-[#0a0a0a] border-l border-neutral-800 h-full flex flex-col shadow-2xl animate-fade-in">
+                                <div className="p-6 border-b border-neutral-800 flex justify-between items-center"><h2 className="font-mono tracking-widest">CARRITO</h2><button onClick={()=>setIsCartOpen(false)}><Icon name="X"/></button></div>
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                    {cart.length===0 ? <p className="text-center text-xs mt-10 text-neutral-600">Vacío</p> : cart.map((i,x) => (
+                                        <div key={x} className="flex gap-4 bg-neutral-900/50 p-2 border border-neutral-800">
+                                            <img src={i.image} className="w-14 h-16 object-cover"/>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between"><h4 className="text-xs font-bold uppercase">{i.name}</h4><button onClick={()=>setCart(prev=>prev.filter((_,z)=>z!==x))} className="text-neutral-600 hover:text-red-500"><Icon name="Trash2" size={12}/></button></div>
+                                                <p className="text-neutral-500 text-[10px]">{i.size}</p>
+                                                <p className="text-xs font-mono">C$ {i.price}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {cart.length>0 && <div className="p-6 border-t border-neutral-800"><Button onClick={()=>{setIsCartOpen(false);setView('checkout')}} className="w-full">Pagar C$ {cartTotal.toFixed(2)}</Button></div>}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* BANNER */}
+                    {showBanner && bannerConfig?.bannerActive && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={()=>setShowBanner(false)}>
+                            <div className="relative max-w-lg w-full">
+                                <button onClick={(e)=>{e.stopPropagation();setShowBanner(false)}} className="absolute -top-10 right-0 hover:text-[#E60033]"><Icon name="X" size={32}/></button>
+                                <img src={bannerConfig.bannerImage} className="w-full h-auto border border-neutral-800 shadow-2xl" onClick={(e)=>e.stopPropagation()} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MAIN */}
+                    <main>
+                        {view === 'product' && selectedProduct ? <ProductDetail product={selectedProduct} addToCart={addToCart} setView={setView} /> : (
+                            <>
+                                <div className="relative h-[90vh] flex items-center justify-center overflow-hidden">
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614726365723-49cfae97c6ce?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center"><div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#050505]"></div></div>
+                                    <div className="relative z-10 text-center px-4 flex flex-col items-center">
+                                        <h1 className="font-cyber font-black text-6xl md:text-8xl mb-6 uppercase italic tracking-tighter" style={{textShadow: '0 0 30px rgba(0,0,0,0.8)'}}>KURA STUDIO</h1>
+                                        <Button onClick={()=>document.getElementById('shop').scrollIntoView({behavior:'smooth'})}>Ver Catálogo</Button>
+                                    </div>
+                                    <div className="absolute bottom-10 animate-bounce-slow text-neutral-600"><Icon name="ChevronDown" size={24}/></div>
+                                </div>
+                                <div id="shop" className="max-w-7xl mx-auto px-4 py-24">
+                                    <div className="flex justify-between items-end mb-12 border-b border-neutral-800 pb-4"><h2 className="text-3xl font-black uppercase italic">Catálogo</h2><span className="text-neutral-500 text-xs font-mono">{products.length} ITEMS</span></div>
+                                    {products.length===0 ? <div className="text-center py-20 text-neutral-600 text-sm">Cargando...</div> : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                            {products.map(p => (
+                                                <div key={p.id} className="group cursor-pointer" onClick={() => { setSelectedProduct(p); setView('product'); }}>
+                                                    <div className="aspect-[3/4] bg-neutral-900 mb-4 border border-neutral-800 relative overflow-hidden group-hover:border-[#E60033]/50 transition-all">
+                                                        <img src={p.image} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"/>
+                                                        <div className="absolute top-2 left-2 bg-[#E60033] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">New</div>
+                                                    </div>
+                                                    <h3 className="font-bold text-sm uppercase tracking-wide group-hover:text-[#E60033] transition-colors">{p.name}</h3>
+                                                    <p className="font-mono text-xs font-bold mt-1">C$ {p.price}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="bg-[#0a0a0a] py-12 border-t border-neutral-900 text-center">
+                        <div className="flex justify-center gap-6 mb-6">
+                            <a href={INSTAGRAM_URL} target="_blank" className="text-neutral-500 hover:text-[#E60033]"><Icon name="Instagram" size={20}/></a>
+                            <a href={`https://wa.me/${PHONE_NUMBER}`} target="_blank" className="text-neutral-500 hover:text-green-500"><Icon name="MessageCircle" size={20}/></a>
+                        </div>
+                        <h2 className="font-cyber font-bold text-lg mb-2 tracking-widest">KURA STUDIO</h2>
+                        <div className="flex items-center justify-center gap-2 opacity-40 mt-4 text-[10px]">
+                            <span className="text-neutral-500 font-rounded">Powered by</span>
+                            <span className="font-rounded font-bold flex items-center gap-1">Kodialabs <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div></span>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+

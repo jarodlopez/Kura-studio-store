@@ -334,13 +334,7 @@
                     </button>
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 mt-8">
-                        {/* AQUÍ ESTÁ EL CAMBIO VISUAL PRINCIPAL 
-                           - aspect-[3/4]: Rectángulo vertical en móvil (más alto que ancho)
-                           - lg:h-[80vh]: En PC ocupa el 80% de la altura de la pantalla (bastante grande)
-                           - bg-black: Fondo negro puro
-                           - object-cover: La imagen cubre todo el contenedor (sin bordes negros)
-                           - object-top: Se alinea arriba para no cortar cabezas en fotos de modelos
-                        */}
+                        {/* AQUÍ ESTÁ EL CAMBIO VISUAL PRINCIPAL */}
                         <div className="bg-black border border-[#222] relative group w-full aspect-[3/4] lg:aspect-auto lg:h-[80vh] overflow-hidden">
                             <img 
                                 src={product.image} 
@@ -796,10 +790,13 @@
             };
 
             const removeFromCart = (index) => setCart(cart.filter((_, i) => i !== index));
+            
+            // NUEVA FUNCIÓN: LIMPIAR TODO
+            const clearCart = () => setCart([]);
 
             const cartTotal = cart.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
 
-            const CartDrawer = ({ isOpen, onClose, cart, remove, onCheckout }) => {
+            const CartDrawer = ({ isOpen, onClose, cart, remove, clearCart, onCheckout }) => {
                 if (!isOpen) return null;
                 const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
                 return (
@@ -808,17 +805,20 @@
                         <div className="relative w-full max-w-md bg-[#050505] border-l border-[#222] h-full flex flex-col shadow-2xl animate-fade-in">
                             <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#0a0a0a]">
                                 <h2 className="font-logo font-bold text-xl uppercase text-white">CARRITO ({cart.length})</h2>
-                                <button onClick={onClose} className="hover:text-[#ff003c] transition-colors"><Icon name="x" size={24}/></button>
+                                <div className="flex gap-4 items-center">
+                                    {cart.length > 0 && <button onClick={clearCart} className="text-[10px] text-[#ccff00] font-bold border border-[#ccff00] px-2 py-1 hover:bg-[#ccff00] hover:text-black transition">LIMPIAR</button>}
+                                    <button onClick={onClose} className="hover:text-[#ff003c] transition-colors"><Icon name="x" size={24}/></button>
+                                </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-6 space-y-6">
                                 {cart.length === 0 ? <div className="text-center mt-20 text-neutral-600 font-mono">VACÍO</div> : cart.map((item, i) => (
-                                    <div key={i} className="flex gap-4 bg-[#0a0a0a] p-3 border border-[#222] relative">
+                                    <div key={`${item.id}-${item.size}-${i}`} className="flex gap-4 bg-[#0a0a0a] p-3 border border-[#222] relative group">
                                         <img src={item.image} className="w-20 h-24 object-cover grayscale"/>
                                         <div className="flex flex-col justify-between py-1">
                                             <div><h4 className="font-bold text-white text-sm uppercase">{item.name}</h4><span className="text-xs font-mono text-neutral-500">TALLA {item.size} / x{item.qty}</span></div>
                                             <span className="text-[#ccff00] font-mono font-bold">C$ {formatPrice(item.price)}</span>
                                         </div>
-                                        <button onClick={() => remove(i)} className="absolute top-2 right-2 text-neutral-600 hover:text-[#ff003c]"><Icon name="trash-2" size={16}/></button>
+                                        <button onClick={() => remove(i)} className="absolute top-2 right-2 text-neutral-500 hover:text-[#ff003c] z-10 p-2"><Icon name="trash-2" size={16}/></button>
                                     </div>
                                 ))}
                             </div>
@@ -912,6 +912,7 @@
                         onClose={() => setIsCartOpen(false)} 
                         cart={cart}
                         remove={removeFromCart}
+                        clearCart={clearCart}
                         onCheckout={() => { setIsCartOpen(false); setView('checkout'); }}
                     />
                 </div>

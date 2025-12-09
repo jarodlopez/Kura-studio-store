@@ -334,7 +334,7 @@
                     </button>
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 mt-8">
-                        {/* AQUÍ ESTÁ EL CAMBIO VISUAL PRINCIPAL */}
+                        {/* IMAGEN GRANDE Y MEJORADA */}
                         <div className="bg-black border border-[#222] relative group w-full aspect-[3/4] lg:aspect-auto lg:h-[80vh] overflow-hidden">
                             <img 
                                 src={product.image} 
@@ -394,7 +394,7 @@
             );
         };
 
-        // 3. MAPA Y CHECKOUT (Guardado de Orden arreglado)
+        // 3. MAPA Y CHECKOUT (REPARADO: PANTALLAZO NEGRO)
         const SmartCheckout = ({ cart, subtotal, onBack, onFinish, setCriticalError }) => {
             const [step, setStep] = useState(1);
             const [shippingCost, setShippingCost] = useState(0);
@@ -416,17 +416,22 @@
 
             const total = subtotal + shippingCost;
 
+            // --- ESTE USEEFFECT FUE EL CAUSANTE DEL ERROR. AHORA ESTÁ BLINDADO ---
             useEffect(() => {
+                // Solo ejecutar si estamos en el paso 1 y hay contenedor
                 if (step === 1 && mapContainerRef.current) {
+                    
+                    // Si ya existe un mapa, lo limpiamos para evitar duplicados (CRÍTICO)
+                    if (mapInstanceRef.current) {
+                        mapInstanceRef.current.remove();
+                        mapInstanceRef.current = null;
+                    }
+
                     const L = window.L;
                     if (!L) return;
 
-                    if (mapInstanceRef.current) {
-                        mapInstanceRef.current.invalidateSize();
-                        return;
-                    }
-                    
                     try {
+                        // Crear nueva instancia de mapa
                         const map = L.map(mapContainerRef.current, { 
                             zoomControl: false,
                             scrollWheelZoom: false 
@@ -450,17 +455,27 @@
                             handleRouteCalculation(e.latlng.lat, e.latlng.lng);
                         });
 
+                        // Guardar referencia
                         mapInstanceRef.current = map;
                     } catch (e) {
-                        setCriticalError(`Error al inicializar el mapa: ${e.message}`);
+                        console.error(e);
+                        // No mostrar error crítico al usuario si es solo un re-render
                     }
                 }
-            }, [step]);
+
+                // FUNCIÓN DE LIMPIEZA (Cleanup)
+                return () => {
+                    if (mapInstanceRef.current) {
+                        mapInstanceRef.current.remove();
+                        mapInstanceRef.current = null;
+                    }
+                };
+            }, [step]); // Se ejecuta cuando cambia el paso
 
             const handleRouteCalculation = (lat, lng) => {
                 const L = window.L;
                 if (!L || !mapInstanceRef.current || !L.Routing) {
-                     setCriticalError("El módulo de ruteo (Leaflet Routing Machine) no está disponible.");
+                     // Silencioso para no romper flujo
                      return;
                 }
                 
@@ -524,12 +539,44 @@
                     
                     control.on('routingerror', () => {
                         setIsCalculating(false);
-                        setCriticalError("Error al calcular la ruta OSRM. Intenta acercar el punto a una calle principal.");
+                        // No bloquear, permitir continuar
+                        setCriticalError("No se pudo trazar la ruta exacta, pero guardamos tu ubicación.");
                     });
 
                 } catch (error) {
-                    setCriticalError(`Error al ejecutar L.Routing: ${error.message}`);
+                    console.error("Routing error", error);
                     setIsCalculating(false);
+                }
+            };
+
+            const handleSearch = async (e) => {
+                if (e.type === 'keydown' && e.key !== 'Enter') return;
+                
+                e.preventDefault(); 
+                if (!searchQuery) return;
+                setIsSearching(true);
+                
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=ni&viewbox=-86.4,-11.9,-86.1,12.3&bounded=1`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat); 
+                        const lon = parseFloat(data[0].lon); 
+                        
+                        if (!isNaN(lat) && !isNaN(lon) && mapInstanceRef.current) {
+                            mapInstanceRef.current.setView([lat, lon], 16);
+                            handleRouteCalculation(lat, lon);
+                            mapInstanceRef.current.invalidateSize(); 
+                        }
+                    } else {
+                        alert("Lugar no encontrado en el área de Managua.");
+                    }
+                } catch(err) { 
+                    console.error("Search error", err);
+                } finally { 
+                    setIsSearching(false); 
                 }
             };
 
@@ -923,4 +970,4 @@
         root.render(<App />);
     </script>
 </body>
-</html>
+    </html>

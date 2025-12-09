@@ -137,22 +137,20 @@
     <script type="text/babel">
         // --- 0. MOCK DATA & CONFIG ---
         const MOCK_PRODUCTS = [
-            { id: '1', name: 'UNIT-01 HOODIE', price: 1200, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070&auto=format&fit=crop', description: 'Sudadera oversize de alto gramaje. Algodón peinado. Estampado puff print en espalda.' },
-            { id: '2', name: 'CYBER CARGO V2', price: 1800, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=1997&auto=format&fit=crop', description: 'Pantalón cargo técnico con múltiples bolsillos y correas ajustables. Tela ripstop.' },
-            { id: '3', name: 'AKIRA TEE', price: 850, category: 'TOPS', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1974&auto=format&fit=crop', description: 'Camiseta gráfica edición limitada. Lavado acid wash para efecto vintage.' },
-            { id: '4', name: 'MECHA VEST', price: 2100, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2020&auto=format&fit=crop', description: 'Chaleco táctico utilitario. Ideal para layering.' },
+            { id: '1', name: 'UNIT-01 HOODIE', price: 1200, category: 'OUTERWEAR', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070&auto=format&fit=crop', description: 'Sudadera oversize de alto gramaje.' },
+            { id: '2', name: 'CYBER CARGO V2', price: 1800, category: 'BOTTOMS', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=1997&auto=format&fit=crop', description: 'Pantalón cargo técnico.' },
         ];
 
         const PHONE = "+50587091008";
         const BANK_ACCOUNT = "123456789"; 
         const KASH_QR_URL = "https://raw.githubusercontent.com/jarodlopez/Kura-studio-store/refs/heads/main/IMG-20251203-WA0009.jpg";
         
-        // --- CONFIGURACIÓN DE ENVÍO ACTUALIZADA ---
+        // --- CONFIGURACIÓN DE ENVÍO ---
         const MAP_CONFIG = {
             origin: { lat: 12.1418164, lng: -86.2569277 }, 
-            baseRate: 80,       // Costo base
-            baseDistance: 3,    // Primeros 3km
-            extraRate: 13,      // Costo por km extra (Actualizado a 13)
+            baseRate: 80,       
+            baseDistance: 3,    
+            extraRate: 13,      
         };
 
         const { useState, useEffect, useRef, useMemo } = React;
@@ -286,9 +284,6 @@
             );
         };
 
-        // --- COMPONENTS OPTIMIZADOS ---
-        
-        // 1. REPARACIÓN DE GUÍA DE TALLAS (Más amigable para móvil)
         const SizeTable = ({ onClose }) => (
             <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
                 <div className="bg-[#111] border border-[#ff003c] w-full max-w-lg relative p-0 overflow-hidden shadow-[0_0_50px_rgba(255,0,60,0.1)] animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -322,11 +317,13 @@
             </div>
         );
 
-        // 2. MEJORA VISTA DE DETALLE (Móvil optimizado)
+        // 2. MEJORA VISTA DE DETALLE (Con soporte para tallas y ofertas de Admin)
         const ProductDetail = ({ product, onBack, onAdd }) => {
-            const [size, setSize] = useState('M');
+            const sizeOptions = product.sizes && product.sizes.length > 0 ? product.sizes : ['S','M','L','XL'];
+            const [size, setSize] = useState(sizeOptions[0]);
             const [qty, setQty] = useState(1);
             const [showTable, setShowTable] = useState(false);
+            const hasDiscount = product.comparePrice && product.comparePrice > product.price;
 
             return (
                 <div className="min-h-screen pt-24 pb-20 px-4 container mx-auto animate-fade-in relative max-w-6xl">
@@ -337,10 +334,19 @@
                     </button>
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 mt-8">
-                        {/* Imagen - Ahora ocupa más espacio y se ve mejor en móvil */}
-                        <div className="bg-[#0a0a0a] border border-[#222] relative group aspect-square lg:h-[600px] w-full flex items-center justify-center p-6 overflow-hidden">
-                            <img src={product.image} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"/>
-                            <div className="absolute top-4 right-4 bg-[#ff003c] text-white text-[10px] font-bold px-3 py-1 uppercase rounded-sm">IN STOCK</div>
+                        {/* AQUÍ ESTÁ EL CAMBIO VISUAL PRINCIPAL 
+                           - aspect-[3/4]: Rectángulo vertical en móvil (más alto que ancho)
+                           - lg:h-[80vh]: En PC ocupa el 80% de la altura de la pantalla (bastante grande)
+                           - bg-black: Fondo negro puro
+                           - object-cover: La imagen cubre todo el contenedor (sin bordes negros)
+                           - object-top: Se alinea arriba para no cortar cabezas en fotos de modelos
+                        */}
+                        <div className="bg-black border border-[#222] relative group w-full aspect-[3/4] lg:aspect-auto lg:h-[80vh] overflow-hidden">
+                            <img 
+                                src={product.image} 
+                                className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                            />
+                            {hasDiscount && <div className="absolute top-4 right-4 bg-[#ccff00] text-black text-xs font-bold px-3 py-1 uppercase rounded-sm">OFERTA</div>}
                         </div>
 
                         <div className="flex flex-col justify-center space-y-6">
@@ -349,9 +355,10 @@
                                 <h1 className="text-4xl md:text-6xl font-black font-logo text-white uppercase leading-none">{product.name}</h1>
                             </div>
                             
-                            <div className="flex items-center justify-between border-y border-[#222] py-4">
+                            <div className="flex items-center gap-4 border-y border-[#222] py-4">
                                 <div className="text-3xl font-mono font-bold text-[#ccff00]">C$ {formatPrice(product.price)}</div>
-                                <div className="text-neutral-500 text-xs font-mono uppercase">IVA INCLUIDO</div>
+                                {hasDiscount && <div className="text-xl font-mono font-bold text-neutral-500 line-through">C$ {formatPrice(product.comparePrice)}</div>}
+                                <div className="text-neutral-500 text-xs font-mono uppercase ml-auto">IVA INCLUIDO</div>
                             </div>
                             
                             <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-light">{product.description}</p>
@@ -364,7 +371,7 @@
                                         <button onClick={() => setShowTable(true)} className="text-[10px] text-[#ff003c] underline font-mono font-bold uppercase hover:text-white">GUÍA DE TALLAS</button>
                                     </div>
                                     <div className="grid grid-cols-4 gap-2">
-                                        {['S','M','L','XL'].map(s => (
+                                        {sizeOptions.map(s => (
                                             <button key={s} onClick={() => setSize(s)} className={`h-12 border flex items-center justify-center font-mono font-bold text-sm transition-all relative overflow-hidden ${size===s ? 'bg-white text-black border-white' : 'bg-[#050505] border-[#333] text-neutral-500 hover:border-[#ff003c] hover:text-[#ff003c]'}`}>
                                                 {s}
                                                 {size===s && <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#ff003c]"></div>}
@@ -393,7 +400,7 @@
             );
         };
 
-        // 3. MAPA Y CHECKOUT (Mapa cuadrado y corrección de error de envío)
+        // 3. MAPA Y CHECKOUT (Guardado de Orden arreglado)
         const SmartCheckout = ({ cart, subtotal, onBack, onFinish, setCriticalError }) => {
             const [step, setStep] = useState(1);
             const [shippingCost, setShippingCost] = useState(0);
@@ -428,7 +435,7 @@
                     try {
                         const map = L.map(mapContainerRef.current, { 
                             zoomControl: false,
-                            scrollWheelZoom: false // --- FIX: Prevenir scroll accidental ---
+                            scrollWheelZoom: false 
                         }).setView([MAP_CONFIG.origin.lat, MAP_CONFIG.origin.lng], 13);
                         
                         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -507,10 +514,8 @@
                         const d = e.routes[0].summary.totalDistance / 1000;
                         setDistance(d);
                         
-                        // --- LÓGICA DE COSTO DE ENVÍO ACTUALIZADA ---
-                        let cost = MAP_CONFIG.baseRate; // 80 base
+                        let cost = MAP_CONFIG.baseRate; 
                         if (d > MAP_CONFIG.baseDistance) {
-                            // 13 por km extra
                             cost += Math.ceil(d - MAP_CONFIG.baseDistance) * MAP_CONFIG.extraRate;
                         }
                         
@@ -534,40 +539,38 @@
                 }
             };
 
-            const handleSearch = async (e) => {
-                if (e.type === 'keydown' && e.key !== 'Enter') return;
-                
-                e.preventDefault(); 
-                if (!searchQuery) return;
-                setIsSearching(true);
-                
-                try {
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=ni&viewbox=-86.4,-11.9,-86.1,12.3&bounded=1`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat); 
-                        const lon = parseFloat(data[0].lon); 
-                        
-                        if (!isNaN(lat) && !isNaN(lon) && mapInstanceRef.current) {
-                            mapInstanceRef.current.setView([lat, lon], 16);
-                            handleRouteCalculation(lat, lon);
-                            mapInstanceRef.current.invalidateSize(); 
-                        }
-                    } else {
-                        alert("Lugar no encontrado en el área de Managua.");
-                    }
-                } catch(err) { 
-                    setCriticalError(`Error en fetch de búsqueda: ${err.message}`);
-                } finally { 
-                    setIsSearching(false); 
-                }
-            };
-
             const confirmOrder = async () => {
+                // 1. Crear ID
                 const newId = `ORD-${Date.now().toString().slice(-6)}`;
                 setOrderId(newId);
+
+                // 2. Guardar en Base de Datos (Para que lo vea el Admin)
+                if (isFirebaseActive && db) {
+                    try {
+                        await db.collection('orders').add({
+                            orderId: newId,
+                            date: firebase.firestore.FieldValue.serverTimestamp(),
+                            customer: {
+                                name: formData.name,
+                                phone: formData.phone,
+                                detail: formData.detail
+                            },
+                            destination: destination || null,
+                            items: cart,
+                            subtotal: subtotal,
+                            shipping: shippingCost,
+                            total: total,
+                            paymentMethod: paymentMethod,
+                            cashAmount: cashAmount || null,
+                            status: 'pending'
+                        });
+                        console.log("Orden guardada correctamente en Dashboard");
+                    } catch (error) {
+                        console.error("Error guardando orden:", error);
+                    }
+                }
+                
+                // 3. Continuar
                 setStep(4);
             };
 
@@ -637,7 +640,6 @@
                                             <Button onClick={handleSearch} disabled={isSearching} className="px-6 py-0">{isSearching ? <Icon name="loader-2" className="animate-spin"/> : <Icon name="search"/>}</Button>
                                         </div>
                                         
-                                        {/* --- FIX: MAPA CUADRADO PARA FACILITAR SCROLL EN MOVIL --- */}
                                         <div className="relative w-full aspect-square md:aspect-video bg-[#111] border border-[#333] group overflow-hidden">
                                             <div ref={mapContainerRef} className="w-full h-full z-0" />
                                             {!destination && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur text-white px-6 py-3 rounded-full text-xs font-bold z-[400] border border-[#ff003c] animate-bounce pointer-events-none shadow-lg flex items-center gap-2"><Icon name="map-pin" size={14}/> TOCA TU UBICACIÓN EN EL MAPA</div>}
@@ -713,7 +715,6 @@
                                         <div className="flex justify-between items-center">
                                             <span className="flex items-center gap-1"><Icon name="truck" size={12}/> ENVÍO {distance > 0 && <span className="bg-[#222] text-white px-1 ml-1">{distance.toFixed(1)}km</span>}</span>
                                             
-                                            {/* --- FIX: CORREGIDO EL ERROR DE VISUALIZACIÓN DEL COSTO --- */}
                                             <span className={shippingCost > 0 ? 'text-[#ccff00]' : ''}>
                                                 {shippingCost > 0 ? `C$ ${formatPrice(shippingCost)}` : '--'}
                                             </span>
@@ -756,8 +757,13 @@
                     if (isFirebaseActive && db) {
                         try {
                             const snap = await db.collection('products').orderBy('createdAt', 'desc').get();
-                            if (!snap.empty) setProducts(snap.docs.map(d => ({id:d.id, ...d.data()})));
-                            else setProducts(MOCK_PRODUCTS);
+                            if (!snap.empty) {
+                                // Filtrar productos activos
+                                const loaded = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                                setProducts(loaded.filter(p => p.isActive !== false));
+                            } else { 
+                                setProducts(MOCK_PRODUCTS);
+                            }
                         } catch (e) { 
                             console.error("Error cargando productos:", e);
                             setProducts(MOCK_PRODUCTS); 
@@ -857,19 +863,29 @@
                                         <span className="font-mono text-[#ff003c] text-xs font-bold">{products.length} ITEMS</span>
                                     </div>
                                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                                        {products.map(product => (
-                                            <div key={product.id} className="group cursor-pointer" onClick={() => { setSelectedProduct(product); setView('product'); }}>
-                                                <div className="aspect-[3/4] overflow-hidden bg-[#0a0a0a] border border-[#222] relative mb-4">
-                                                    <img src={product.image} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"/>
-                                                    <div className="absolute top-2 left-0 bg-[#ff003c] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest translate-x-[-100%] group-hover:translate-x-0 transition-transform">NEW</div>
+                                        {products.map(product => {
+                                            const hasDiscount = product.comparePrice && product.comparePrice > product.price;
+                                            return (
+                                                <div key={product.id} className="group cursor-pointer" onClick={() => { setSelectedProduct(product); setView('product'); }}>
+                                                    <div className="aspect-[3/4] overflow-hidden bg-[#0a0a0a] border border-[#222] relative mb-4">
+                                                        <img src={product.image} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"/>
+                                                        {hasDiscount ? (
+                                                            <div className="absolute top-2 left-0 bg-[#ccff00] text-black text-[9px] font-bold px-2 py-1 uppercase tracking-widest translate-x-[-100%] group-hover:translate-x-0 transition-transform">OFERTA</div>
+                                                        ) : (
+                                                            <div className="absolute top-2 left-0 bg-[#ff003c] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest translate-x-[-100%] group-hover:translate-x-0 transition-transform">NEW</div>
+                                                        )}
+                                                    </div>
+                                                    <div className="px-2">
+                                                        <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-1">{product.category}</p>
+                                                        <h3 className="text-sm font-bold text-white uppercase truncate mb-2">{product.name}</h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-mono text-lg font-bold text-[#ff003c]">C$ {formatPrice(product.price)}</span>
+                                                            {hasDiscount && <span className="font-mono text-xs text-neutral-500 line-through">C$ {formatPrice(product.comparePrice)}</span>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="px-2">
-                                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-1">{product.category}</p>
-                                                    <h3 className="text-sm font-bold text-white uppercase truncate mb-2">{product.name}</h3>
-                                                    <span className="font-mono text-lg font-bold text-[#ff003c]">C$ {formatPrice(product.price)}</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </>
@@ -907,5 +923,3 @@
     </script>
 </body>
 </html>
-
-

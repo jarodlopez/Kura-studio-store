@@ -45,11 +45,12 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
+<!-- CAMBIO AQUÍ: 'md:overflow-hidden' permite scroll en móvil pero lo bloquea en PC -->
+<body class="min-h-screen flex flex-col md:flex-row md:overflow-hidden relative bg-black">
 
-    <!-- LOGIN SCREEN (Cubre todo hasta que inicies sesión) -->
-    <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
+    <!-- LOGIN SCREEN -->
+    <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden my-auto">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ff003c] to-[#ccff00]"></div>
             
             <div class="text-center mb-8">
@@ -75,10 +76,10 @@
     </div>
 
     <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-[#0a0a0a] border-r border-[#222] flex flex-col z-20">
+    <aside class="w-full md:w-64 bg-[#0a0a0a] border-r border-[#222] flex flex-col z-20 shrink-0">
         <div class="p-6 border-b border-[#222]">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">KURA<span class="text-[#ff003c]">ADMIN</span></h1>
-            <p class="text-[10px] text-neutral-500 font-mono mt-1">SYSTEM V3.0 SECURE</p>
+            <p class="text-[10px] text-neutral-500 font-mono mt-1">SYSTEM V3.1 MOBILE READY</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
             <button onclick="switchTab('products')" id="tab-products" class="w-full text-left p-3 bg-[#111] text-[#ccff00] border-l-2 border-[#ccff00] flex items-center gap-3 font-bold transition-all">
@@ -96,7 +97,8 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 bg-black relative overflow-y-auto h-screen custom-scrollbar">
+    <!-- CAMBIO AQUÍ: 'md:h-screen' y 'h-auto' para que en móvil crezca naturalmente -->
+    <main class="flex-1 bg-black relative md:overflow-y-auto md:h-screen h-auto custom-scrollbar">
         
         <!-- VISTA PRODUCTOS -->
         <div id="view-products" class="p-6 md:p-10 space-y-6 pb-24">

@@ -57,20 +57,20 @@
             0% { opacity: 0; } 50% { opacity: 1; background: white; } 100% { opacity: 1; background: black; pointer-events: all; }
         }
 
-        /* GLITCH TOTAL (En todo el texto) */
+        /* GLITCH TOTAL (SUAVE) */
         .glitch-text { position: relative; display: inline-block; }
         .glitch-text::before, .glitch-text::after {
             content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent;
         }
-        /* Capa Roja */
+        /* Capa Roja - Animación más lenta (3s) para efecto suave */
         .glitch-text::before {
             left: 2px; text-shadow: -1px 0 var(--neon-red); clip: rect(24px, 550px, 90px, 0); 
-            animation: glitch-anim 0.3s infinite linear alternate-reverse;
+            animation: glitch-anim 3s infinite linear alternate-reverse;
         }
-        /* Capa Verde Ácida */
+        /* Capa Verde Ácida - Animación más lenta (2s) */
         .glitch-text::after {
             left: -2px; text-shadow: -1px 0 var(--acid-green); clip: rect(85px, 550px, 140px, 0); 
-            animation: glitch-anim 0.2s infinite linear alternate-reverse;
+            animation: glitch-anim 2s infinite linear alternate-reverse;
         }
         
         @keyframes glitch-anim {
@@ -108,7 +108,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
         const { createRoot } = ReactDOM;
 
         const DEFAULT_CONFIG = {
@@ -148,6 +148,20 @@
             const [config, setConfig] = useState(DEFAULT_CONFIG);
             const [animState, setAnimState] = useState('intro');
 
+            // Lógica para dividir el título en dos líneas
+            const [line1, line2] = useMemo(() => {
+                const text = config.title || "KURA STUDIO";
+                const spaceIndex = text.indexOf(' ');
+                
+                if (spaceIndex !== -1) {
+                    return [text.slice(0, spaceIndex), text.slice(spaceIndex + 1)];
+                } else {
+                    // Si no hay espacio, dividir a la mitad como fallback
+                    const mid = Math.ceil(text.length / 2);
+                    return [text.slice(0, mid), text.slice(mid)];
+                }
+            }, [config.title]);
+
             useEffect(() => {
                 if (db) {
                     db.collection('settings').doc('landing_page_v2').onSnapshot(doc => {
@@ -186,29 +200,37 @@
                     <div className="relative z-20 flex flex-col items-center justify-center w-full px-4 text-center my-auto">
                         <p className="text-[#ccff00] font-mono text-[10px] md:text-sm mb-4 tracking-[0.3em] animate-pulse">EST. 2026 // SYSTEM ONLINE</p>
                         
-                        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 mb-4">
+                        {/* CONTENEDOR CENTRAL: LOGO + TITULO EN 2 LINEAS */}
+                        <div className="flex flex-col items-center gap-6 mb-4">
                             {config.logo && (
-                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-[#ff003c] overflow-hidden shadow-[0_0_20px_#ff003c] bg-black">
+                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-[#ff003c] overflow-hidden shadow-[0_0_20px_#ff003c] bg-black mb-2">
                                     <img src={config.logo} className="w-full h-full object-cover" alt="Logo"/>
                                 </div>
                             )}
                             
-                            {/* TÍTULO CON GLITCH COMPLETO */}
-                            <h1 
-                                className="text-4xl sm:text-6xl md:text-9xl font-black font-['Syncopate'] text-white glitch-text tracking-tighter leading-none" 
-                                data-text={config.title}
-                            >
-                                {config.title}
-                            </h1>
+                            <div className="flex flex-col items-center leading-none">
+                                <h1 
+                                    className="text-5xl sm:text-7xl md:text-9xl font-black font-['Syncopate'] text-white glitch-text tracking-tighter" 
+                                    data-text={line1}
+                                >
+                                    {line1}
+                                </h1>
+                                <h1 
+                                    className="text-5xl sm:text-7xl md:text-9xl font-black font-['Syncopate'] text-white glitch-text tracking-tighter" 
+                                    data-text={line2}
+                                >
+                                    {line2}
+                                </h1>
+                            </div>
                         </div>
                         
-                        <p className="text-gray-300 font-mono text-xs sm:text-sm md:text-xl mb-12 max-w-xs sm:max-w-lg tracking-widest border-l-2 border-[#ff003c] pl-4 mx-auto">
+                        <p className="text-gray-300 font-mono text-xs sm:text-sm md:text-xl mb-12 max-w-xs sm:max-w-lg tracking-widest border-l-2 border-[#ff003c] pl-4 mx-auto mt-4">
                             {config.subtitle}
                         </p>
 
                         <button 
                             onClick={handleEnter}
-                            className="btn-samurai bg-transparent border-2 border-white text-white px-8 py-4 md:px-12 md:py-5 font-bold font-['Chakra_Petch'] text-sm md:text-xl relative group overflow-hidden touch-manipulation mt-8"
+                            className="btn-samurai bg-transparent border-2 border-white text-white px-8 py-4 md:px-12 md:py-5 font-bold font-['Chakra_Petch'] text-sm md:text-xl relative group overflow-hidden touch-manipulation mt-4"
                         >
                             <span className="relative z-10 flex items-center gap-3">
                                 {config.btnText} <Icon name="zap" className="group-hover:text-black transition-colors w-4 h-4 md:w-6 md:h-6"/>

@@ -112,7 +112,7 @@
         </div>
 
         <!-- VISTA ÓRDENES -->
-        <div id="view-orders" class="hidden p-6 md:p-10 space-y-6 pb-24">
+        <div id="view-orders" class="p-6 md:p-10 space-y-6 pb-24">
             <h2 class="text-xl font-bold text-white flex items-center gap-2 sticky top-0 bg-black py-4 z-10"><i data-lucide="list-ordered"></i> HISTORIAL DE ÓRDENES</h2>
             <div class="overflow-x-auto border border-[#222] bg-[#0a0a0a]">
                 <table class="w-full text-left text-sm">
@@ -277,6 +277,24 @@
         </div>
     </div>
 
+    <!-- MODAL VISOR DE FACTURA EMBEBIDO - NUEVO -->
+    <div id="invoiceViewerModal" class="fixed inset-0 z-[101] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closeInvoiceViewerModal()"></div>
+        <div class="bg-[#111] border border-[#333] w-full max-w-4xl h-[90vh] relative z-10 p-0 shadow-2xl flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-[#333] flex justify-between items-center bg-[#0a0a0a]">
+                <h3 class="text-[#ccff00] font-mono text-lg font-bold">FACTURA EMBEBIDA <span id="viewerOrderId"></span></h3>
+                <button onclick="closeInvoiceViewerModal()" class="text-white hover:text-red-500"><i data-lucide="x"></i></button>
+            </div>
+            <div class="flex-1 p-4 bg-white/50 relative">
+                <iframe id="pdfViewer" class="w-full h-full border-0 bg-white"></iframe>
+            </div>
+            <div class="p-4 border-t border-[#333] bg-[#0a0a0a] flex gap-4 justify-end">
+                <button id="btnSavePdf" class="cyber-btn bg-white text-black py-2 px-4 text-sm font-bold flex items-center gap-2 hover:bg-gray-200"><i data-lucide="download"></i> GUARDAR PDF</button>
+                <button id="btnPrintInvoice" class="cyber-btn bg-[#ff003c] text-white py-2 px-4 text-sm font-bold flex items-center gap-2 hover:bg-red-700"><i data-lucide="printer"></i> IMPRIMIR FACTURA</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGICA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -290,6 +308,7 @@
         let products = []; let posCart = []; let currentOrder = null;
         let pendingPosProduct = null; let lastSaleOrder = null;
         let globalSettings = {}; 
+        let lastGeneratedPdf = null; // Variable global para guardar el objeto PDF
 
         // AUTH & INIT
         onAuthStateChanged(auth, async (user) => {
@@ -492,41 +511,67 @@
                  window.open(`https://wa.me/505${o.customer.phone}?text=${msg}`, '_blank');
              }
         }
+        
+        window.closeInvoiceViewerModal = () => {
+            document.getElementById('invoiceViewerModal').classList.add('hidden');
+            document.getElementById('pdfViewer').src = ''; // Clear source
+            lastGeneratedPdf = null;
+        }
 
-        // --- FACTURA PDF GENERATOR (IMPRESIÓN DIRECTA) ---
+        // --- FACTURA PDF GENERATOR (VISOR EMBEBIDO) ---
         window.generateInvoice = async (orderId) => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            // Usamos currentOrder, que fue establecida por viewOrder o lastSaleOrder
             const o = currentOrder; 
             if(!o) return;
 
             const logoUrl = globalSettings.logo || "";
             const shopName = globalSettings.title || "KURA STUDIO";
 
+            // --- PDF Generation Logic (Same as before) ---
             if(logoUrl) { try { doc.addImage(logoUrl, 'JPEG', 15, 15, 20, 20); } catch(e){} }
-
             doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.text(shopName, 40, 25);
             doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text("RUC: J0310000000000", 40, 30); doc.text("Managua, Nicaragua", 40, 35);
-
             doc.setFontSize(12); doc.text(`FACTURA #${o.orderId}`, 140, 25);
             doc.setFontSize(10);
             const dateStr = o.date ? new Date(o.date.seconds*1000).toLocaleDateString() : new Date().toLocaleDateString();
             doc.text(`Fecha: ${dateStr}`, 140, 32); doc.text(`Estado: ${o.status.toUpperCase()}`, 140, 39);
-
             doc.setDrawColor(200); doc.line(15, 45, 195, 45);
             doc.setFont("helvetica", "bold"); doc.text("CLIENTE:", 15, 52);
             doc.setFont("helvetica", "normal"); doc.text(`${o.customer.name}`, 15, 58);
 
             const tableBody = o.items.map(i => [ i.qty, `${i.name} (${i.size})`, `C$ ${i.price.toFixed(2)}`, `C$ ${(i.price * i.qty).toFixed(2)}` ]);
-
             doc.autoTable({ startY: 70, head: [['Cant', 'Descripción', 'Unit', 'Total']], body: tableBody, theme: 'striped', headStyles: { fillColor: [0, 0, 0] } });
 
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.setFont("helvetica", "bold"); doc.text(`TOTAL: C$ ${o.total.toFixed(2)}`, 140, finalY);
+            // --- END PDF Generation Logic ---
 
-            // AUTO-PRINT
-            doc.autoPrint(); 
-            window.open(doc.output('bloburl'), '_blank');
+            // 1. Store the PDF object globally for the buttons
+            lastGeneratedPdf = doc;
+
+            // 2. Display in embedded viewer
+            const blob = doc.output('blob');
+            const blobUrl = URL.createObjectURL(blob);
+            
+            document.getElementById('pdfViewer').src = blobUrl;
+            document.getElementById('viewerOrderId').innerText = `#${o.orderId}`;
+            document.getElementById('invoiceViewerModal').classList.remove('hidden');
+
+            // 3. Setup modal buttons actions dynamically
+            document.getElementById('btnSavePdf').onclick = () => {
+                if (lastGeneratedPdf) lastGeneratedPdf.save(`Factura_${o.orderId}.pdf`);
+            };
+
+            document.getElementById('btnPrintInvoice').onclick = () => {
+                 // Opción para impresión directa (lanza el diálogo del navegador)
+                 const printWindow = window.open(blobUrl, '_blank');
+                 printWindow.onload = () => {
+                     printWindow.focus();
+                     printWindow.print();
+                 };
+            };
         }
 
         // --- COMMON & MODALS ---
@@ -552,6 +597,7 @@
             document.getElementById('orderStatusUpdate').value = o.status || 'pending';
             
             // --- RESTAURACIÓN DEL HTML DE DETALLE ---
+            const statusClass = o.status === 'completed' ? 'text-green-500' : o.status === 'cancelled' ? 'text-red-500' : 'text-yellow-500';
             let html = `
                 <div class="bg-[#050505] p-4 border border-[#333] mb-4 space-y-3">
                     <div class="grid grid-cols-2 gap-4">
@@ -578,7 +624,7 @@
                         </div>
                         <div>
                             <div class="text-[10px] text-gray-500 uppercase tracking-widest">ESTADO ACTUAL</div>
-                            <div class="text-${o.status === 'completed' ? 'green' : o.status === 'cancelled' ? 'red' : 'yellow'}-500 font-bold uppercase">${o.status || 'PENDING'}</div>
+                            <div class="${statusClass} font-bold uppercase">${o.status || 'PENDING'}</div>
                         </div>
                     </div>
                 </div>
@@ -613,7 +659,9 @@
             document.getElementById('btnUpdateStatus').onclick = async () => {
                 const newStatus = document.getElementById('orderStatusUpdate').value;
                 await updateDoc(doc(db, "orders", id), { status: newStatus });
-                alert("Estado actualizado"); loadOrders(); closeOrderModal();
+                // Usamos console.log en lugar de alert
+                console.log(`Estado de orden ${o.orderId} actualizado a ${newStatus}`);
+                loadOrders(); closeOrderModal();
             };
 
             lucide.createIcons();
@@ -622,7 +670,7 @@
         window.closeOrderModal = () => document.getElementById('orderModal').classList.add('hidden');
 
         // Helpers
-        window.saveLandingConfig = async () => { /* Same as before */ await setDoc(doc(db, "settings", "landing_page_v2"), {title: document.getElementById('landingTitle').value, subtitle: document.getElementById('landingSubtitle').value, bgImage: document.getElementById('landingBgImage').value, logo: document.getElementById('landingLogo').value, btnText: document.getElementById('landingBtnText').value, storeUrl: document.getElementById('landingStoreUrl').value, instagram: document.getElementById('landingInsta').value, whatsapp: document.getElementById('landingWhatsapp').value, tiktok: document.getElementById('landingTiktok').value}, { merge: true }); alert("Guardado"); }
+        window.saveLandingConfig = async () => { /* Same as before */ await setDoc(doc(db, "settings", "landing_page_v2"), {title: document.getElementById('landingTitle').value, subtitle: document.getElementById('landingSubtitle').value, bgImage: document.getElementById('landingBgImage').value, logo: document.getElementById('landingLogo').value, btnText: document.getElementById('landingBtnText').value, storeUrl: document.getElementById('landingStoreUrl').value, instagram: document.getElementById('landingInsta').value, whatsapp: document.getElementById('landingWhatsapp').value, tiktok: document.getElementById('landingTiktok').value}, { merge: true }); console.log("Configuración de Landing Guardada"); }
         async function loadLandingConfig() { try { const s = await getDoc(doc(db, "settings", "landing_page_v2")); if(s.exists()) { globalSettings = s.data(); document.getElementById('landingTitle').value = globalSettings.title||''; document.getElementById('landingSubtitle').value = globalSettings.subtitle||''; document.getElementById('landingBgImage').value = globalSettings.bgImage||''; document.getElementById('landingLogo').value = globalSettings.logo||''; document.getElementById('landingBtnText').value = globalSettings.btnText||''; document.getElementById('landingStoreUrl').value = globalSettings.storeUrl||''; document.getElementById('landingInsta').value = globalSettings.instagram||''; document.getElementById('landingWhatsapp').value = globalSettings.whatsapp||''; document.getElementById('landingTiktok').value = globalSettings.tiktok||''; } } catch(e){} }
         window.switchTab = (t) => { document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden')); document.getElementById(`view-${t}`).classList.remove('hidden'); }
         window.openModal = (id) => { /* Same Product Modal Logic */ if(id){ const p=products.find(x=>x.id===id); window.tempVariants={...p.variants}; document.getElementById('modalTitle').innerText="EDITAR"; document.getElementById('editId').value=p.id; document.getElementById('name').value=p.name; document.getElementById('price').value=p.price; document.getElementById('currentImageUrl').value=p.image; document.getElementById('isActive').checked=p.isActive!==false; if(p.image)document.getElementById('imgPreview').src=p.image; } else { window.tempVariants={S:10,M:10,L:10}; document.getElementById('modalTitle').innerText="NUEVO"; document.getElementById('editId').value=""; document.getElementById('productForm').reset(); } renderVariants(); document.getElementById('productModal').classList.remove('hidden'); setTimeout(()=>document.getElementById('modalContent').classList.remove('translate-x-full'),10); }

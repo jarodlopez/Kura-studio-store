@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA STUDIO</title>
+    <title>Kura Studio | home</title>
     
     <!-- TAILWIND CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,9 +11,8 @@
     <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Chakra+Petch:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@100;400;900&display=swap" rel="stylesheet">
 
-    <!-- FIREBASE (V8 Compat) -->
+    <!-- FIREBASE (Solo lectura para configuración) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <!-- REACT 18 -->
@@ -39,44 +38,26 @@
             margin: 0; 
         }
 
+        /* ANTI-FOUC (Ocultar hasta que cargue) */
+        #root { opacity: 0; transition: opacity 0.8s ease-in; }
+        #root.loaded { opacity: 1; }
+
         /* --- EFECTO TRUENO / LIGHTNING --- */
         .lightning-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 9999; opacity: 0; pointer-events: none;
         }
-
-        /* Animación de entrada (Intro) */
-        .thunder-intro {
-            animation: thunder-flash 1.5s ease-out forwards;
-        }
-
-        /* Animación de salida (Exit) */
-        .thunder-exit {
-            animation: thunder-flash-exit 0.8s ease-in forwards;
-        }
+        .thunder-intro { animation: thunder-flash 1.5s ease-out forwards; }
+        .thunder-exit { animation: thunder-flash-exit 0.8s ease-in forwards; }
 
         @keyframes thunder-flash {
-            0% { opacity: 1; background: white; }
-            5% { opacity: 0; }
-            10% { opacity: 1; background: #fff; }
-            15% { opacity: 0; }
-            30% { opacity: 0.8; background: #ccff00; } /* Un toque de verde ácido */
-            40% { opacity: 0; }
-            100% { opacity: 0; pointer-events: none; }
+            0% { opacity: 1; background: white; } 5% { opacity: 0; } 10% { opacity: 1; background: #fff; } 15% { opacity: 0; }
+            30% { opacity: 0.8; background: #ccff00; } 40% { opacity: 0; } 100% { opacity: 0; pointer-events: none; }
         }
-
         @keyframes thunder-flash-exit {
-            0% { opacity: 0; }
-            20% { opacity: 0.5; }
-            40% { opacity: 0; }
-            50% { opacity: 1; background: white; }
-            60% { opacity: 0; }
-            80% { opacity: 0; }
-            90% { opacity: 1; background: white; }
-            100% { opacity: 1; background: black; pointer-events: all; }
+            0% { opacity: 0; } 50% { opacity: 1; background: white; } 100% { opacity: 1; background: black; pointer-events: all; }
         }
 
-        /* Glitch y Estilos Generales */
         .glitch-text { position: relative; }
         .glitch-text::before, .glitch-text::after {
             content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent;
@@ -88,9 +69,7 @@
             left: -2px; text-shadow: -1px 0 var(--acid-green); clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2s infinite linear alternate-reverse;
         }
         @keyframes glitch-anim {
-            0% { clip: rect(13px, 9999px, 81px, 0); } 20% { clip: rect(98px, 9999px, 11px, 0); }
-            40% { clip: rect(5px, 9999px, 66px, 0); } 60% { clip: rect(32px, 9999px, 88px, 0); }
-            100% { clip: rect(10px, 9999px, 92px, 0); }
+            0% { clip: rect(13px, 9999px, 81px, 0); } 100% { clip: rect(10px, 9999px, 92px, 0); }
         }
 
         .btn-samurai {
@@ -106,20 +85,22 @@
     </style>
 </head>
 <body>
-    <div id="landing-root"></div>
+    <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
 
+        // Configuración por defecto (Fallback)
         const DEFAULT_CONFIG = {
             title: "KURA STUDIO",
             subtitle: "PREMIUM ANIME STREETWEAR",
             bgImage: "https://images.unsplash.com/photo-1614726365723-49cfae92782f?q=80&w=2602&auto=format&fit=crop", 
-            logo: "", // Nuevo campo Logo
+            logo: "", 
             btnText: "ENTRAR A LA TIENDA",
-            storeUrl: "/tienda.html", 
-            instagram: "https://instagram.com",
-            tiktok: "https://tiktok.com"
+            storeUrl: "https://tu-tienda-kura.vercel.app", // AQUÍ ES DONDE REDIRIGE
+            instagram: "#",
+            whatsapp: "#"
         };
 
         const firebaseConfig = {
@@ -137,71 +118,47 @@
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
             } else if (window.firebase) db = firebase.firestore();
-        } catch (e) { console.error("Firebase Error:", e); }
+        } catch (e) { console.error(e); }
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
             return <i data-lucide={name} className={className}></i>;
         };
 
-        // --- ADMIN PANEL (Simplificado para el render) ---
-        // (La lógica completa está en tu archivo admin, aquí solo necesitamos el modal de edición básico por si acaso)
-        const AdminPanel = ({ config, onSave, onClose }) => {
-            const [form, setForm] = useState(config);
-            const [status, setStatus] = useState('');
-
-            const handleSave = async () => {
-                setStatus('Guardando...');
-                try {
-                    if (db) await db.collection('settings').doc('landing_page_v2').set(form);
-                    onSave(form); setTimeout(onClose, 1000);
-                } catch (e) { setStatus('Error'); console.error(e); }
-            };
-
-            return (
-                <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="w-full max-w-2xl bg-[#111] border border-[#333] p-6 relative">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-red-500"><Icon name="x"/></button>
-                        <h2 className="text-xl font-bold font-mono text-[#ccff00] mb-6 flex items-center gap-2"><Icon name="settings"/> CONFIGURACIÓN RÁPIDA</h2>
-                        <div className="space-y-4 font-mono text-sm">
-                            <input placeholder="Título" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white"/>
-                            <input placeholder="URL Tienda" value={form.storeUrl} onChange={e => setForm({...form, storeUrl: e.target.value})} className="w-full bg-black border border-[#ff003c] p-2 text-white"/>
-                            <p className="text-xs text-gray-500">Para subir logo o imágenes, usa el panel completo admin.html</p>
-                        </div>
-                        <div className="mt-4 flex justify-end gap-4"><button onClick={handleSave} className="bg-[#ff003c] text-white px-6 py-2 font-bold">GUARDAR</button></div>
-                    </div>
-                </div>
-            );
-        };
-
         const LandingPage = () => {
             const [config, setConfig] = useState(DEFAULT_CONFIG);
-            const [showAdmin, setShowAdmin] = useState(false);
-            const [animState, setAnimState] = useState('intro'); // intro | idle | exit
+            const [animState, setAnimState] = useState('intro');
 
             useEffect(() => {
+                // Cargar config de Firebase
                 if (db) {
                     db.collection('settings').doc('landing_page_v2').onSnapshot(doc => {
                         if (doc.exists) setConfig({ ...DEFAULT_CONFIG, ...doc.data() });
+                        document.getElementById('root').classList.add('loaded');
                     });
+                } else {
+                    document.getElementById('root').classList.add('loaded');
                 }
-                // Activar animación de intro al montar (recargar página)
-                setAnimState('intro');
+                
+                // Animación inicial
                 const t = setTimeout(() => setAnimState('idle'), 1500);
                 return () => clearTimeout(t);
             }, []);
 
             const handleEnter = () => {
                 setAnimState('exit');
+                // Redirección después de la animación de trueno
                 setTimeout(() => {
-                    window.location.href = config.storeUrl || "/tienda.html";
+                    // Si hay URL en firebase usa esa, sino la por defecto
+                    const target = config.storeUrl || "/tienda"; 
+                    window.location.href = target;
                 }, 800);
             };
 
             return (
                 <div className="relative w-full min-h-screen flex flex-col justify-center items-center overflow-x-hidden py-12 md:py-0">
                     
-                    {/* LIGHTNING OVERLAY */}
+                    {/* LAYERS DE TRUENO */}
                     <div className={`lightning-overlay ${animState === 'intro' ? 'thunder-intro' : ''} ${animState === 'exit' ? 'thunder-exit' : ''}`}></div>
 
                     {/* FONDO */}
@@ -217,11 +174,11 @@
                         <div className="w-[1px] h-32 bg-white/50 mt-8"></div>
                     </div>
 
-                    {/* CONTENIDO */}
+                    {/* CONTENIDO CENTRAL */}
                     <div className="relative z-20 flex flex-col items-center justify-center w-full px-4 text-center my-auto">
                         <p className="text-[#ccff00] font-mono text-[10px] md:text-sm mb-4 tracking-[0.3em] animate-pulse">EST. 2026 // SYSTEM ONLINE</p>
                         
-                        {/* HEADER: LOGO + TITULO */}
+                        {/* LOGO + TITULO */}
                         <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 mb-4">
                             {config.logo && (
                                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-[#ff003c] overflow-hidden shadow-[0_0_20px_#ff003c] bg-black">
@@ -248,30 +205,16 @@
                         </button>
                     </div>
 
-                    {/* SOCIALS */}
+                    {/* FOOTER */}
                     <div className="relative md:absolute bottom-0 md:bottom-10 left-0 w-full flex justify-center gap-8 z-20 mt-12 md:mt-0 pb-8 md:pb-0">
                         <a href={config.instagram} target="_blank" className="text-white hover:text-[#ff003c] transition-colors"><Icon name="instagram"/></a>
-                        <a href={config.tiktok} target="_blank" className="text-white hover:text-[#ccff00] transition-colors"><Icon name="twitter"/></a>
+                        <a href={config.whatsapp || "#"} target="_blank" className="text-white hover:text-[#25D366] transition-colors"><Icon name="message-circle"/></a>
                     </div>
-
-                    {/* BOTÓN ADMIN */}
-                    <div className="fixed bottom-4 right-4 z-50">
-                        <button onClick={() => {
-                            const pwd = prompt("Acceso Admin:");
-                            if(pwd === "admin123") setShowAdmin(true);
-                        }} className="text-gray-500/50 hover:text-white transition-colors p-2 bg-black/20 rounded">
-                            <Icon name="lock" className="w-4 h-4"/>
-                        </button>
-                    </div>
-
-                    {showAdmin && (
-                        <AdminPanel config={config} onSave={setConfig} onClose={() => setShowAdmin(false)} />
-                    )}
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('landing-root'));
+        const root = createRoot(document.getElementById('root'));
         root.render(<LandingPage />);
     </script>
 </body>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kura Studio | Entrada</title>
+    
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Chakra+Petch:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@100;400;900&display=swap" rel="stylesheet">
+
+    <!-- FIREBASE (V8 Compat - Necesario para el Admin) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- REACT 18 -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --neon-red: #ff003c;
+            --acid-green: #ccff00;
+            --cyber-black: #050505;
+        }
+        body { background-color: var(--cyber-black); color: white; font-family: 'Chakra Petch', sans-serif; overflow: hidden; margin: 0; }
+
+        /* --- EFECTOS VISUALES --- */
+        .glitch-text { position: relative; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--cyber-black);
+        }
+        .glitch-text::before {
+            left: 2px; text-shadow: -1px 0 var(--neon-red); clip: rect(24px, 550px, 90px, 0); animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px; text-shadow: -1px 0 var(--acid-green); clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(13px, 9999px, 81px, 0); } 20% { clip: rect(98px, 9999px, 11px, 0); }
+            40% { clip: rect(5px, 9999px, 66px, 0); } 60% { clip: rect(32px, 9999px, 88px, 0); }
+            100% { clip: rect(10px, 9999px, 92px, 0); }
+        }
+
+        /* KATANA SLASH EXIT ANIMATION */
+        .slash-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 50%; background: #000; z-index: 100;
+            transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        .slash-layer.bottom {
+            top: auto; bottom: 0; transform: translateY(100%); border-top: 2px solid var(--neon-red);
+        }
+        .slash-layer.top {
+            border-bottom: 2px solid var(--neon-red);
+        }
+        .slashing .slash-layer.top { transform: translateY(0); }
+        .slashing .slash-layer.bottom { transform: translateY(0); }
+
+        /* ESTILOS DE BOTÓN SAMURAI */
+        .btn-samurai {
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.2em;
+        }
+        .btn-samurai:hover {
+            background: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 30px rgba(255, 0, 60, 0.5);
+            text-shadow: 0 0 5px white;
+        }
+
+        .vertical-text { writing-mode: vertical-rl; text-orientation: upright; font-family: 'Noto Sans JP', sans-serif; letter-spacing: 0.5em; }
+    </style>
+</head>
+<body>
+    <div id="landing-root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- CONFIGURACIÓN POR DEFECTO ---
+        const DEFAULT_CONFIG = {
+            title: "KURA STUDIO",
+            subtitle: "PREMIUM ANIME STREETWEAR",
+            bgImage: "https://images.unsplash.com/photo-1614726365723-49cfae92782f?q=80&w=2602&auto=format&fit=crop", // Imagen oscura/samurai
+            btnText: "ENTRAR A LA TIENDA",
+            storeUrl: "/tienda", // IMPORTANTE: Aquí pones la ruta de tu archivo de tienda
+            instagram: "https://instagram.com",
+            tiktok: "https://tiktok.com"
+        };
+
+        // --- FIREBASE SETUP (Solo para leer/escribir la config del admin) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAztg4F0twRi2NOP8MayAOUYB0ZtHgkss0",
+            authDomain: "kodialabsnic.firebaseapp.com",
+            projectId: "kodialabsnic",
+            storageBucket: "kodialabsnic.firebasestorage.app",
+            messagingSenderId: "740746852984",
+            appId: "1:740746852984:web:972aa34592aef881630b8d"
+        };
+
+        let db;
+        try {
+            if (window.firebase && !firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+            } else if (window.firebase) {
+                db = firebase.firestore();
+            }
+        } catch (e) { console.error("Firebase Error:", e); }
+
+        const Icon = ({ name, className }) => {
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        // --- PANEL DE ADMINISTRACIÓN ---
+        const AdminPanel = ({ config, onSave, onClose }) => {
+            const [form, setForm] = useState(config);
+            const [status, setStatus] = useState('');
+
+            const handleSave = async () => {
+                setStatus('Guardando...');
+                try {
+                    if (db) {
+                        await db.collection('settings').doc('landing_page_v2').set(form);
+                        setStatus('¡Guardado en Nube!');
+                    } else {
+                        setStatus('Error: Firebase no conectado');
+                    }
+                    onSave(form);
+                    setTimeout(onClose, 1000);
+                } catch (e) {
+                    setStatus('Error al guardar');
+                    console.error(e);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+                    <div className="w-full max-w-2xl bg-[#111] border border-[#333] p-8 relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-red-500"><Icon name="x"/></button>
+                        <h2 className="text-2xl font-bold font-mono text-[#ccff00] mb-6 flex items-center gap-2"><Icon name="settings"/> CONFIGURACIÓN LANDING</h2>
+                        
+                        <div className="space-y-4 font-mono text-sm">
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-gray-500 mb-1">Título Principal</label>
+                                    <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-500 mb-1">Subtítulo</label>
+                                    <input value={form.subtitle} onChange={e => setForm({...form, subtitle: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-500 mb-1">Imagen de Fondo (URL)</label>
+                                <input value={form.bgImage} onChange={e => setForm({...form, bgImage: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
+                            </div>
+
+                            <div className="p-4 border border-[#ff003c]/30 bg-[#ff003c]/5">
+                                <label className="block text-[#ff003c] font-bold mb-1">URL DE LA TIENDA (Redirección)</label>
+                                <input value={form.storeUrl} onChange={e => setForm({...form, storeUrl: e.target.value})} placeholder="ej: index.html o https://tienda.com" className="w-full bg-black border border-[#ff003c] p-2 text-white outline-none"/>
+                                <p className="text-xs text-gray-500 mt-1">Cuando el usuario haga clic en "Entrar", será enviado a esta dirección.</p>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-gray-500 mb-1">Instagram URL</label>
+                                    <input value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white outline-none"/>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-500 mb-1">TikTok URL</label>
+                                    <input value={form.tiktok} onChange={e => setForm({...form, tiktok: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white outline-none"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex justify-end gap-4">
+                            <span className="text-[#ccff00] self-center animate-pulse">{status}</span>
+                            <button onClick={handleSave} className="bg-[#ff003c] text-white px-6 py-3 font-bold hover:bg-white hover:text-black transition">GUARDAR CAMBIOS</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- LANDING PAGE ---
+        const LandingPage = () => {
+            const [config, setConfig] = useState(DEFAULT_CONFIG);
+            const [showAdmin, setShowAdmin] = useState(false);
+            const [isExiting, setIsExiting] = useState(false); // Estado para la animación de salida
+
+            // Cargar configuración de Firebase al inicio
+            useEffect(() => {
+                if (db) {
+                    db.collection('settings').doc('landing_page_v2').onSnapshot(doc => {
+                        if (doc.exists) setConfig({ ...DEFAULT_CONFIG, ...doc.data() });
+                    });
+                }
+            }, []);
+
+            const handleEnter = () => {
+                // 1. Activar animación de "Corte de Katana"
+                setIsExiting(true);
+                
+                // 2. Esperar a que termine la animación (800ms) y redirigir
+                setTimeout(() => {
+                    // AQUÍ ESTÁ LA LÓGICA DE REDIRECCIÓN
+                    // Si tu archivo de tienda se llama 'index.html', ponlo en el admin o aquí.
+                    window.location.href = config.storeUrl || "/";
+                }, 800);
+            };
+
+            return (
+                <div className="relative w-full h-screen overflow-hidden">
+                    {/* LAYERS DE SALIDA (Animación Katana) */}
+                    <div className={`slash-layer top ${isExiting ? 'translate-y-0' : '-translate-y-full'}`}></div>
+                    <div className={`slash-layer bottom ${isExiting ? 'translate-y-0' : 'translate-y-full'}`}></div>
+
+                    {/* IMAGEN DE FONDO */}
+                    <div className="absolute inset-0 z-0">
+                        <div className="absolute inset-0 bg-black/50 z-10"></div>
+                        <img src={config.bgImage} className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-110" style={{animation: 'pulse 10s infinite'}} />
+                    </div>
+
+                    {/* DECORACIÓN JAPONESA LATERAL */}
+                    <div className="absolute right-10 top-0 bottom-0 z-10 hidden md:flex flex-col justify-center items-center pointer-events-none mix-blend-overlay">
+                        <div className="w-[1px] h-32 bg-white/50 mb-8"></div>
+                        <span className="vertical-text text-4xl font-black text-white/30">クラスタジオ</span>
+                        <div className="w-[1px] h-32 bg-white/50 mt-8"></div>
+                    </div>
+
+                    {/* CONTENIDO CENTRAL */}
+                    <div className="relative z-20 flex flex-col items-center justify-center h-full px-4 text-center">
+                        <p className="text-[#ccff00] font-mono text-xs md:text-sm mb-4 tracking-[0.5em] animate-pulse">EST. 2026 // SYSTEM ONLINE</p>
+                        
+                        <h1 className="text-5xl md:text-9xl font-black font-['Syncopate'] text-white mb-2 glitch-text tracking-tighter" data-text={config.title}>
+                            {config.title}
+                        </h1>
+                        
+                        <p className="text-gray-300 font-mono text-sm md:text-xl mb-12 max-w-lg tracking-widest border-l-2 border-[#ff003c] pl-4">
+                            {config.subtitle}
+                        </p>
+
+                        <button 
+                            onClick={handleEnter}
+                            className="btn-samurai bg-transparent border-2 border-white text-white px-12 py-5 font-bold font-['Chakra_Petch'] text-lg md:text-xl relative group overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center gap-3">
+                                {config.btnText} <Icon name="arrow-right" className="group-hover:translate-x-2 transition-transform"/>
+                            </span>
+                            {/* Efecto hover de fondo */}
+                            <div className="absolute inset-0 bg-[#ff003c] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out z-0"></div>
+                        </button>
+                    </div>
+
+                    {/* FOOTER SOCIALES */}
+                    <div className="absolute bottom-10 left-0 w-full flex justify-center gap-8 z-20">
+                        <a href={config.instagram} target="_blank" className="text-white hover:text-[#ff003c] transition-colors"><Icon name="instagram"/></a>
+                        <a href={config.tiktok} target="_blank" className="text-white hover:text-[#ccff00] transition-colors"><Icon name="twitter"/></a>
+                    </div>
+
+                    {/* BOTÓN ADMIN (CANDADO OCULTO) */}
+                    <div className="absolute bottom-4 right-4 z-50">
+                        <button onClick={() => {
+                            const pwd = prompt("Código de Acceso:");
+                            if(pwd === "admin123") setShowAdmin(true);
+                        }} className="text-gray-800 hover:text-white transition-colors p-2">
+                            <Icon name="lock" className="w-4 h-4"/>
+                        </button>
+                    </div>
+
+                    {/* MODAL ADMIN */}
+                    {showAdmin && (
+                        <AdminPanel 
+                            config={config} 
+                            onSave={setConfig} 
+                            onClose={() => setShowAdmin(false)} 
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('landing-root'));
+        root.render(<LandingPage />);
+    </script>
+</body>
+</html>

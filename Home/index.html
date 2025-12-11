@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kura Studio | Entrada</title>
+    <title>KURA STUDIO</title>
     
     <!-- TAILWIND CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +11,7 @@
     <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Chakra+Petch:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@100;400;900&display=swap" rel="stylesheet">
 
-    <!-- FIREBASE (V8 Compat - Necesario para el Admin) -->
+    <!-- FIREBASE (V8 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -31,7 +31,6 @@
             --cyber-black: #050505;
         }
         
-        /* FIX: Permitir scroll si es necesario, pero ocultar scrollbar horizontal */
         body { 
             background-color: var(--cyber-black); 
             color: white; 
@@ -40,10 +39,47 @@
             margin: 0; 
         }
 
-        /* --- EFECTOS VISUALES --- */
+        /* --- EFECTO TRUENO / LIGHTNING --- */
+        .lightning-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; opacity: 0; pointer-events: none;
+        }
+
+        /* Animación de entrada (Intro) */
+        .thunder-intro {
+            animation: thunder-flash 1.5s ease-out forwards;
+        }
+
+        /* Animación de salida (Exit) */
+        .thunder-exit {
+            animation: thunder-flash-exit 0.8s ease-in forwards;
+        }
+
+        @keyframes thunder-flash {
+            0% { opacity: 1; background: white; }
+            5% { opacity: 0; }
+            10% { opacity: 1; background: #fff; }
+            15% { opacity: 0; }
+            30% { opacity: 0.8; background: #ccff00; } /* Un toque de verde ácido */
+            40% { opacity: 0; }
+            100% { opacity: 0; pointer-events: none; }
+        }
+
+        @keyframes thunder-flash-exit {
+            0% { opacity: 0; }
+            20% { opacity: 0.5; }
+            40% { opacity: 0; }
+            50% { opacity: 1; background: white; }
+            60% { opacity: 0; }
+            80% { opacity: 0; }
+            90% { opacity: 1; background: white; }
+            100% { opacity: 1; background: black; pointer-events: all; }
+        }
+
+        /* Glitch y Estilos Generales */
         .glitch-text { position: relative; }
         .glitch-text::before, .glitch-text::after {
-            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--cyber-black);
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent;
         }
         .glitch-text::before {
             left: 2px; text-shadow: -1px 0 var(--neon-red); clip: rect(24px, 550px, 90px, 0); animation: glitch-anim 3s infinite linear alternate-reverse;
@@ -57,21 +93,6 @@
             100% { clip: rect(10px, 9999px, 92px, 0); }
         }
 
-        /* KATANA SLASH EXIT ANIMATION */
-        .slash-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 50%; background: #000; z-index: 100;
-            transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.7, 0, 0.3, 1);
-        }
-        .slash-layer.bottom {
-            top: auto; bottom: 0; transform: translateY(100%); border-top: 2px solid var(--neon-red);
-        }
-        .slash-layer.top {
-            border-bottom: 2px solid var(--neon-red);
-        }
-        .slashing .slash-layer.top { transform: translateY(0); }
-        .slashing .slash-layer.bottom { transform: translateY(0); }
-
-        /* ESTILOS DE BOTÓN SAMURAI */
         .btn-samurai {
             clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
             transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.2em;
@@ -90,18 +111,17 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- CONFIGURACIÓN POR DEFECTO ---
         const DEFAULT_CONFIG = {
             title: "KURA STUDIO",
             subtitle: "PREMIUM ANIME STREETWEAR",
             bgImage: "https://images.unsplash.com/photo-1614726365723-49cfae92782f?q=80&w=2602&auto=format&fit=crop", 
+            logo: "", // Nuevo campo Logo
             btnText: "ENTRAR A LA TIENDA",
-            storeUrl: "/tienda.html", // Ajusta esto si tu archivo tiene otro nombre
+            storeUrl: "/tienda.html", 
             instagram: "https://instagram.com",
             tiktok: "https://tiktok.com"
         };
 
-        // --- FIREBASE SETUP ---
         const firebaseConfig = {
             apiKey: "AIzaSyAztg4F0twRi2NOP8MayAOUYB0ZtHgkss0",
             authDomain: "kodialabsnic.firebaseapp.com",
@@ -116,9 +136,7 @@
             if (window.firebase && !firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
-            } else if (window.firebase) {
-                db = firebase.firestore();
-            }
+            } else if (window.firebase) db = firebase.firestore();
         } catch (e) { console.error("Firebase Error:", e); }
 
         const Icon = ({ name, className }) => {
@@ -126,7 +144,8 @@
             return <i data-lucide={name} className={className}></i>;
         };
 
-        // --- PANEL DE ADMINISTRACIÓN ---
+        // --- ADMIN PANEL (Simplificado para el render) ---
+        // (La lógica completa está en tu archivo admin, aquí solo necesitamos el modal de edición básico por si acaso)
         const AdminPanel = ({ config, onSave, onClose }) => {
             const [form, setForm] = useState(config);
             const [status, setStatus] = useState('');
@@ -134,63 +153,31 @@
             const handleSave = async () => {
                 setStatus('Guardando...');
                 try {
-                    if (db) {
-                        await db.collection('settings').doc('landing_page_v2').set(form);
-                        setStatus('¡Guardado!');
-                    } else {
-                        setStatus('Error: Sin conexión');
-                    }
-                    onSave(form);
-                    setTimeout(onClose, 1000);
-                } catch (e) {
-                    setStatus('Error');
-                    console.error(e);
-                }
+                    if (db) await db.collection('settings').doc('landing_page_v2').set(form);
+                    onSave(form); setTimeout(onClose, 1000);
+                } catch (e) { setStatus('Error'); console.error(e); }
             };
 
             return (
                 <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="w-full max-w-2xl bg-[#111] border border-[#333] p-6 md:p-8 relative my-8">
+                    <div className="w-full max-w-2xl bg-[#111] border border-[#333] p-6 relative">
                         <button onClick={onClose} className="absolute top-4 right-4 text-white hover:text-red-500"><Icon name="x"/></button>
-                        <h2 className="text-xl md:text-2xl font-bold font-mono text-[#ccff00] mb-6 flex items-center gap-2"><Icon name="settings"/> CONFIGURACIÓN</h2>
-                        
+                        <h2 className="text-xl font-bold font-mono text-[#ccff00] mb-6 flex items-center gap-2"><Icon name="settings"/> CONFIGURACIÓN RÁPIDA</h2>
                         <div className="space-y-4 font-mono text-sm">
-                            <div>
-                                <label className="block text-gray-500 mb-1">Título</label>
-                                <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
-                            </div>
-                            <div>
-                                <label className="block text-gray-500 mb-1">Subtítulo</label>
-                                <textarea rows="2" value={form.subtitle} onChange={e => setForm({...form, subtitle: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
-                            </div>
-                            <div>
-                                <label className="block text-gray-500 mb-1">Fondo (URL)</label>
-                                <input value={form.bgImage} onChange={e => setForm({...form, bgImage: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white focus:border-[#ff003c] outline-none"/>
-                            </div>
-                            <div className="p-3 border border-[#ff003c]/30 bg-[#ff003c]/5">
-                                <label className="block text-[#ff003c] font-bold mb-1">URL TIENDA</label>
-                                <input value={form.storeUrl} onChange={e => setForm({...form, storeUrl: e.target.value})} className="w-full bg-black border border-[#ff003c] p-2 text-white outline-none"/>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <input placeholder="Instagram URL" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value})} className="bg-black border border-[#333] p-2 text-white outline-none"/>
-                                <input placeholder="TikTok URL" value={form.tiktok} onChange={e => setForm({...form, tiktok: e.target.value})} className="bg-black border border-[#333] p-2 text-white outline-none"/>
-                            </div>
+                            <input placeholder="Título" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-black border border-[#333] p-2 text-white"/>
+                            <input placeholder="URL Tienda" value={form.storeUrl} onChange={e => setForm({...form, storeUrl: e.target.value})} className="w-full bg-black border border-[#ff003c] p-2 text-white"/>
+                            <p className="text-xs text-gray-500">Para subir logo o imágenes, usa el panel completo admin.html</p>
                         </div>
-
-                        <div className="mt-8 flex justify-end gap-4">
-                            <span className="text-[#ccff00] self-center animate-pulse">{status}</span>
-                            <button onClick={handleSave} className="bg-[#ff003c] text-white px-6 py-3 font-bold hover:bg-white hover:text-black transition text-sm">GUARDAR</button>
-                        </div>
+                        <div className="mt-4 flex justify-end gap-4"><button onClick={handleSave} className="bg-[#ff003c] text-white px-6 py-2 font-bold">GUARDAR</button></div>
                     </div>
                 </div>
             );
         };
 
-        // --- LANDING PAGE ---
         const LandingPage = () => {
             const [config, setConfig] = useState(DEFAULT_CONFIG);
             const [showAdmin, setShowAdmin] = useState(false);
-            const [isExiting, setIsExiting] = useState(false);
+            const [animState, setAnimState] = useState('intro'); // intro | idle | exit
 
             useEffect(() => {
                 if (db) {
@@ -198,44 +185,53 @@
                         if (doc.exists) setConfig({ ...DEFAULT_CONFIG, ...doc.data() });
                     });
                 }
+                // Activar animación de intro al montar (recargar página)
+                setAnimState('intro');
+                const t = setTimeout(() => setAnimState('idle'), 1500);
+                return () => clearTimeout(t);
             }, []);
 
             const handleEnter = () => {
-                setIsExiting(true);
+                setAnimState('exit');
                 setTimeout(() => {
                     window.location.href = config.storeUrl || "/tienda.html";
                 }, 800);
             };
 
             return (
-                /* FIX: min-h-screen en lugar de h-screen y padding vertical (py-12) para evitar cortes en móviles */
                 <div className="relative w-full min-h-screen flex flex-col justify-center items-center overflow-x-hidden py-12 md:py-0">
                     
-                    {/* LAYERS DE SALIDA */}
-                    <div className={`slash-layer top ${isExiting ? 'translate-y-0' : '-translate-y-full'}`}></div>
-                    <div className={`slash-layer bottom ${isExiting ? 'translate-y-0' : 'translate-y-full'}`}></div>
+                    {/* LIGHTNING OVERLAY */}
+                    <div className={`lightning-overlay ${animState === 'intro' ? 'thunder-intro' : ''} ${animState === 'exit' ? 'thunder-exit' : ''}`}></div>
 
-                    {/* IMAGEN DE FONDO (Fixed para que no se mueva al scrollear en móvil) */}
+                    {/* FONDO */}
                     <div className="fixed inset-0 z-0">
                         <div className="absolute inset-0 bg-black/50 z-10"></div>
-                        <img src={config.bgImage} className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-110" style={{animation: 'pulse 10s infinite'}} />
+                        <img src={config.bgImage} className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-110 animate-pulse" />
                     </div>
 
-                    {/* DECORACIÓN JAPONESA (Oculta en móvil para dar espacio) */}
+                    {/* DECORACIÓN LATERAL */}
                     <div className="fixed right-10 top-0 bottom-0 z-10 hidden md:flex flex-col justify-center items-center pointer-events-none mix-blend-overlay">
                         <div className="w-[1px] h-32 bg-white/50 mb-8"></div>
                         <span className="vertical-text text-4xl font-black text-white/30">クラスタジオ</span>
                         <div className="w-[1px] h-32 bg-white/50 mt-8"></div>
                     </div>
 
-                    {/* CONTENIDO CENTRAL */}
+                    {/* CONTENIDO */}
                     <div className="relative z-20 flex flex-col items-center justify-center w-full px-4 text-center my-auto">
-                        <p className="text-[#ccff00] font-mono text-[10px] md:text-sm mb-4 tracking-[0.3em] md:tracking-[0.5em] animate-pulse">EST. 2026 // SYSTEM ONLINE</p>
+                        <p className="text-[#ccff00] font-mono text-[10px] md:text-sm mb-4 tracking-[0.3em] animate-pulse">EST. 2026 // SYSTEM ONLINE</p>
                         
-                        {/* Título Responsive: text-4xl en móvil, text-9xl en desktop */}
-                        <h1 className="text-4xl sm:text-6xl md:text-9xl font-black font-['Syncopate'] text-white mb-4 glitch-text tracking-tighter leading-none" data-text={config.title}>
-                            {config.title}
-                        </h1>
+                        {/* HEADER: LOGO + TITULO */}
+                        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 mb-4">
+                            {config.logo && (
+                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-[#ff003c] overflow-hidden shadow-[0_0_20px_#ff003c] bg-black">
+                                    <img src={config.logo} className="w-full h-full object-cover" alt="Logo"/>
+                                </div>
+                            )}
+                            <h1 className="text-4xl sm:text-6xl md:text-9xl font-black font-['Syncopate'] text-white glitch-text tracking-tighter leading-none" data-text={config.title}>
+                                {config.title}
+                            </h1>
+                        </div>
                         
                         <p className="text-gray-300 font-mono text-xs sm:text-sm md:text-xl mb-12 max-w-xs sm:max-w-lg tracking-widest border-l-2 border-[#ff003c] pl-4 mx-auto">
                             {config.subtitle}
@@ -246,13 +242,13 @@
                             className="btn-samurai bg-transparent border-2 border-white text-white px-8 py-4 md:px-12 md:py-5 font-bold font-['Chakra_Petch'] text-sm md:text-xl relative group overflow-hidden touch-manipulation"
                         >
                             <span className="relative z-10 flex items-center gap-3">
-                                {config.btnText} <Icon name="arrow-right" className="group-hover:translate-x-2 transition-transform w-4 h-4 md:w-6 md:h-6"/>
+                                {config.btnText} <Icon name="zap" className="group-hover:text-black transition-colors w-4 h-4 md:w-6 md:h-6"/>
                             </span>
-                            <div className="absolute inset-0 bg-[#ff003c] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out z-0"></div>
+                            <div className="absolute inset-0 bg-[#ff003c] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-100 ease-out z-0"></div>
                         </button>
                     </div>
 
-                    {/* FOOTER SOCIALES (Relative en móvil, absolute en desktop) */}
+                    {/* SOCIALS */}
                     <div className="relative md:absolute bottom-0 md:bottom-10 left-0 w-full flex justify-center gap-8 z-20 mt-12 md:mt-0 pb-8 md:pb-0">
                         <a href={config.instagram} target="_blank" className="text-white hover:text-[#ff003c] transition-colors"><Icon name="instagram"/></a>
                         <a href={config.tiktok} target="_blank" className="text-white hover:text-[#ccff00] transition-colors"><Icon name="twitter"/></a>
@@ -269,11 +265,7 @@
                     </div>
 
                     {showAdmin && (
-                        <AdminPanel 
-                            config={config} 
-                            onSave={setConfig} 
-                            onClose={() => setShowAdmin(false)} 
-                        />
+                        <AdminPanel config={config} onSave={setConfig} onClose={() => setShowAdmin(false)} />
                     )}
                 </div>
             );

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA | ADMIN</title>
+    <title>KURA | ENTERPRISE ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -165,6 +165,17 @@
         </div>
     </div>
 
+    <!-- MODAL SELECCIÓN VARIANTE POS (NUEVO) -->
+    <div id="posVariantModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closePosVariantModal()"></div>
+        <div class="bg-[#111] border border-[#333] w-full max-w-sm relative z-10 p-6 shadow-2xl flex flex-col">
+            <h3 class="text-[#ccff00] font-mono text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="layers"></i> SELECCIONAR VARIANTE</h3>
+            <p id="posVariantProductName" class="text-white mb-4 text-sm border-b border-[#333] pb-2"></p>
+            <div id="posVariantOptions" class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar"></div>
+            <button onclick="closePosVariantModal()" class="mt-6 w-full text-center text-gray-500 hover:text-white text-xs font-mono">CANCELAR</button>
+        </div>
+    </div>
+
     <!-- MODAL DETALLE ORDEN (MEJORADO) -->
     <div id="orderModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeOrderModal()"></div>
@@ -195,6 +206,7 @@
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
 
         let products = []; let posCart = []; let currentOrder = null;
+        let pendingPosProduct = null; // Variable para el modal POS
 
         // AUTH & INIT
         onAuthStateChanged(auth, async (user) => {
@@ -346,30 +358,57 @@
             } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.innerHTML = "GUARDAR DATOS"; }
         });
 
-        // --- POS SYSTEM FIX ---
+        // --- POS SYSTEM UPDATE ---
         window.addToPos = (id) => {
             const p = products.find(x => x.id === id);
             if(!p) return;
 
-            // Variantes reales
             const sizes = p.variants ? Object.keys(p.variants) : (p.sizes || ['U']);
-            let selectedSize = sizes[0]; 
             
-            if(sizes.length > 1 || (sizes.length === 1 && sizes[0] !== 'U')) {
-                const available = sizes.map(s => `${s} (${p.variants ? p.variants[s] : '∞'})`).join(', ');
-                const ask = prompt(`Selecciona Talla [${available}]:`);
-                if(!ask) return;
-                selectedSize = ask.toUpperCase();
-                
-                if(!p.variants || !p.variants[selectedSize] && p.variants[selectedSize] !== 0) {
-                     return alert("Talla no válida");
-                }
+            // Caso 1: Variante única por defecto "U"
+            if(sizes.length === 1 && sizes[0] === 'U') {
+                 addPosItemToCart(p, 'U');
+                 return;
             }
-            
-            if (p.variants && p.variants[selectedSize] <= 0) return alert("¡SIN STOCK!");
 
-            posCart.push({ ...p, size: selectedSize, qty: 1 });
+            // Caso 2: Múltiples variantes -> Abrir Modal UI
+            pendingPosProduct = p;
+            document.getElementById('posVariantProductName').innerText = p.name;
+            const container = document.getElementById('posVariantOptions');
+            container.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const stock = p.variants ? p.variants[size] : '∞';
+                const hasStock = stock === '∞' || stock > 0;
+                
+                const btn = document.createElement('button');
+                btn.className = `p-3 border transition-all ${hasStock ? 'border-[#333] hover:border-[#ccff00] hover:bg-[#222] text-white' : 'border-red-900/50 text-red-700 bg-red-900/10 cursor-not-allowed'} font-mono text-xs flex justify-between items-center group`;
+                btn.disabled = !hasStock;
+                btn.innerHTML = `<span class="font-bold">${size}</span> <span class="${hasStock ? 'text-[#ccff00]' : 'text-red-500'} group-hover:text-white">${stock}</span>`;
+                
+                btn.onclick = () => {
+                    if(hasStock) {
+                        addPosItemToCart(pendingPosProduct, size);
+                        closePosVariantModal();
+                    }
+                };
+                container.appendChild(btn);
+            });
+
+            document.getElementById('posVariantModal').classList.remove('hidden');
+        }
+
+        window.addPosItemToCart = (product, size) => {
+            // Re-chequeo de seguridad
+            if (product.variants && product.variants[size] <= 0) return alert("¡SIN STOCK!");
+            
+            posCart.push({ ...product, size: size, qty: 1 });
             renderPosCart();
+        }
+
+        window.closePosVariantModal = () => {
+            document.getElementById('posVariantModal').classList.add('hidden');
+            pendingPosProduct = null;
         }
 
         window.renderPosCart = () => {

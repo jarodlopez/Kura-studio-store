@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA | ENTERPRISE ADMIN V8.1</title>
+    <title>KURA | ENTERPRISE ADMIN V8.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -41,7 +41,7 @@
     <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black">
         <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(204,255,0,0.1)] relative overflow-hidden flex flex-col items-center">
             <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">KURA<span class="text-[#ff003c]">ADMIN</span></h1>
-            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.1 // UX PATCH</p>
+            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.2 // STABLE</p>
             <form id="loginForm" class="space-y-4 w-full">
                 <input type="email" id="email" class="cyber-input w-full p-4 text-sm" placeholder="ID DE COMANDO" required>
                 <input type="password" id="password" class="cyber-input w-full p-4 text-sm" placeholder="CLAVE DE ACCESO" required>
@@ -58,7 +58,7 @@
         <div class="p-6 border-b border-[#222]">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">KURA<span class="text-[#ccff00]">OS</span></h1>
             <p class="text-[10px] text-neutral-500 font-mono mt-1 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V8.1
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V8.2
             </p>
         </div>
         <nav class="flex-1 p-4 space-y-2 font-mono text-xs">
@@ -755,21 +755,23 @@
         window.closeModal = () => { document.getElementById('modalContent').classList.add('translate-x-full'); setTimeout(()=>document.getElementById('productModal').classList.add('hidden'), 300); }
 
         // --- POS (REUTILIZADO) ---
-        window.filterPos = () => {
+        window.renderPosGrid = () => {
              const container = document.getElementById('posGrid');
-             const term = document.getElementById('posSearch').value.toLowerCase();
+             const term = document.getElementById('posSearch') ? document.getElementById('posSearch').value.toLowerCase() : "";
              container.innerHTML = '';
              products.filter(p => p.isActive !== false && p.name.toLowerCase().includes(term)).forEach(p => {
                  container.innerHTML += `
                     <div onclick="addToPos('${p.id}')" class="bg-[#111] border border-[#333] p-2 cursor-pointer hover:border-[#ccff00] group transition-all">
                         <div class="h-24 w-full bg-black mb-2 overflow-hidden">
-                            <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                            <img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
                         </div>
                         <div class="text-xs font-bold text-white truncate">${p.name}</div>
                         <div class="text-[#ccff00] text-xs font-mono">C$ ${p.price}</div>
                     </div>`;
              });
         }
+        window.filterPos = window.renderPosGrid;
+        
         window.addToPos = (id) => {
              const p = products.find(x => x.id === id);
              if(!p.variants || Object.keys(p.variants).length === 0) { addPosItem(p, 'U', 1); } else {

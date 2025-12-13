@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA | ENTERPRISE ADMIN V7</title>
+    <title>KURA | ENTERPRISE ADMIN V8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -25,16 +25,14 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--acid-green); }
+        .upload-area { border: 2px dashed #333; transition: all 0.3s; cursor: pointer; position: relative; }
+        .upload-area:hover { border-color: var(--acid-green); background: rgba(204,255,0,0.05); }
         
         /* Animaciones */
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
-        .loading-pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        
         .nav-active { background: #111; color: var(--acid-green); border-left-color: var(--acid-green) !important; }
-        .badge-stock-low { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
-        .badge-stock-ok { color: var(--acid-green); }
+        .floating-alert { position: fixed; bottom: 20px; right: 20px; z-index: 50; animation: slideUp 0.3s ease-out; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row md:overflow-hidden relative bg-black">
@@ -43,7 +41,7 @@
     <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black">
         <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(204,255,0,0.1)] relative overflow-hidden flex flex-col items-center">
             <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">KURA<span class="text-[#ff003c]">ADMIN</span></h1>
-            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V7.0 // SECURE ACCESS</p>
+            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.0 // PAYMENT CORE</p>
             <form id="loginForm" class="space-y-4 w-full">
                 <input type="email" id="email" class="cyber-input w-full p-4 text-sm" placeholder="ID DE COMANDO" required>
                 <input type="password" id="password" class="cyber-input w-full p-4 text-sm" placeholder="CLAVE DE ACCESO" required>
@@ -60,7 +58,7 @@
         <div class="p-6 border-b border-[#222]">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">KURA<span class="text-[#ccff00]">OS</span></h1>
             <p class="text-[10px] text-neutral-500 font-mono mt-1 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V7.0
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V8.0
             </p>
         </div>
         <nav class="flex-1 p-4 space-y-2 font-mono text-xs">
@@ -68,7 +66,8 @@
             <button onclick="switchTab('pos')" id="tab-pos" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="scan-barcode"></i> P.O.S / CAJA</button>
             <button onclick="switchTab('orders')" id="tab-orders" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="list-ordered"></i> ÓRDENES</button>
             <button onclick="switchTab('reports')" id="tab-reports" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="bar-chart-3"></i> REPORTES</button>
-            <button onclick="switchTab('config')" id="tab-config" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="settings"></i> CONFIGURACIÓN</button>
+            <button onclick="switchTab('landing')" id="tab-landing" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="layout-template"></i> PORTADA</button>
+            <button onclick="switchTab('config')" id="tab-config" class="nav-btn w-full text-left p-3 border-l-2 border-transparent hover:border-white hover:bg-[#111] hover:text-white text-neutral-400 flex items-center gap-3 transition-all"><i data-lucide="settings"></i> AJUSTES</button>
         </nav>
         <div class="p-4 border-t border-[#222]">
             <button onclick="logout()" class="w-full text-left text-xs font-mono text-red-500 hover:text-white flex items-center gap-2"><i data-lucide="log-out" width="14"></i> DESCONECTAR</button>
@@ -83,7 +82,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center sticky top-0 bg-black/95 backdrop-blur z-10 py-4 border-b border-[#222] gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="box"></i> GESTIÓN DE STOCK</h2>
-                    <p class="text-xs text-gray-500 font-mono">Sincronizado en tiempo real con Ecommerce</p>
+                    <p class="text-xs text-gray-500 font-mono">Sincronizado en tiempo real</p>
                 </div>
                 <div class="flex gap-2">
                      <input type="text" id="productSearch" placeholder="Buscar item..." class="cyber-input px-4 py-2 text-xs w-48" onkeyup="filterProducts()">
@@ -91,12 +90,11 @@
                 </div>
             </div>
             <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Se llena dinámicamente -->
                 <div class="text-white font-mono animate-pulse">Cargando base de datos...</div>
             </div>
         </div>
 
-        <!-- VISTA POS (POINT OF SALE) -->
+        <!-- VISTA POS -->
         <div id="view-pos" class="view-section hidden p-4 md:p-6 pb-24 h-full flex flex-col md:flex-row gap-6">
             <div class="flex-1 flex flex-col h-full">
                 <div class="mb-4 sticky top-0 bg-black z-10 py-2">
@@ -104,7 +102,6 @@
                 </div>
                 <div id="posGrid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar pb-20"></div>
             </div>
-            <!-- PANEL DERECHO (CAJA) -->
             <div class="w-full md:w-[400px] bg-[#0a0a0a] border-l border-[#222] flex flex-col h-[calc(100vh-80px)] sticky top-0 shadow-2xl">
                 <div class="p-4 border-b border-[#222] bg-[#111] flex justify-between items-center">
                     <h3 class="font-bold text-[#ccff00] flex items-center gap-2"><i data-lucide="shopping-cart"></i> ORDEN ACTUAL</h3>
@@ -128,35 +125,48 @@
 
         <!-- VISTA ÓRDENES -->
         <div id="view-orders" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
-            <h2 class="text-xl font-bold text-white flex items-center gap-2 sticky top-0 bg-black py-4 z-10 border-b border-[#222]"><i data-lucide="list-ordered"></i> HISTORIAL DE ÓRDENES</h2>
+            <div class="sticky top-0 bg-black py-4 z-10 border-b border-[#222] flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="list-ordered"></i> HISTORIAL DE ÓRDENES</h2>
+                <input type="text" id="orderSearchInput" placeholder="Buscar ID o Cliente..." class="cyber-input px-3 py-2 text-xs w-64" onkeyup="filterOrders()">
+            </div>
             <div class="overflow-x-auto border border-[#222] bg-[#0a0a0a] rounded-sm">
                 <table class="w-full text-left text-sm">
-                    <thead class="bg-[#111] text-neutral-400 font-mono text-xs uppercase"><tr><th class="p-4">ID</th><th class="p-4">Fecha</th><th class="p-4">Cliente</th><th class="p-4">Total</th><th class="p-4">Método</th><th class="p-4">Estado</th><th class="p-4">Acción</th></tr></thead>
+                    <thead class="bg-[#111] text-neutral-400 font-mono text-xs uppercase"><tr><th class="p-4">ID</th><th class="p-4">Fecha</th><th class="p-4">Cliente</th><th class="p-4">Total</th><th class="p-4">Envío</th><th class="p-4">Método</th><th class="p-4">Estado</th><th class="p-4">Acción</th></tr></thead>
                     <tbody id="ordersTableBody" class="divide-y divide-[#222] text-neutral-300 font-mono text-xs"></tbody>
                 </table>
+                <div class="p-4 text-center">
+                    <button onclick="loadMoreOrders()" class="text-xs text-gray-500 hover:text-[#ccff00]">CARGAR MÁS ANTIGUAS...</button>
+                </div>
             </div>
         </div>
 
         <!-- VISTA REPORTES -->
         <div id="view-reports" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="sticky top-0 bg-black py-4 z-10 border-b border-[#222]">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="bar-chart-3"></i> CONTROL DE VENTAS</h2>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="bar-chart-3"></i> REPORTES DE VENTA</h2>
             </div>
             
-            <div class="bg-[#0a0a0a] border border-[#222] p-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold">Fecha Inicio</label>
-                    <input type="date" id="reportStartDate" class="cyber-input w-full p-2 text-sm">
+            <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-4">
+                <div class="flex gap-2 border-b border-[#333] pb-4">
+                    <button onclick="setReportDate('today')" class="text-[10px] bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:border-[#ccff00] px-3 py-1 uppercase">Hoy</button>
+                    <button onclick="setReportDate('week')" class="text-[10px] bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:border-[#ccff00] px-3 py-1 uppercase">Esta Semana</button>
+                    <button onclick="setReportDate('month')" class="text-[10px] bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:border-[#ccff00] px-3 py-1 uppercase">Este Mes</button>
                 </div>
-                <div>
-                    <label class="text-[10px] text-gray-500 uppercase font-bold">Fecha Fin</label>
-                    <input type="date" id="reportEndDate" class="cyber-input w-full p-2 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="text-[10px] text-gray-500 uppercase font-bold">Fecha Inicio</label>
+                        <input type="date" id="reportStartDate" class="cyber-input w-full p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-500 uppercase font-bold">Fecha Fin</label>
+                        <input type="date" id="reportEndDate" class="cyber-input w-full p-2 text-sm">
+                    </div>
+                    <div>
+                         <label class="text-[10px] text-gray-500 uppercase font-bold">Buscar x Cliente</label>
+                         <input type="text" id="reportSearch" placeholder="..." class="cyber-input w-full p-2 text-sm">
+                    </div>
+                    <button onclick="generateReport()" class="cyber-btn bg-[#00f3ff] text-black h-[42px] flex items-center justify-center gap-2 font-bold"><i data-lucide="filter"></i> FILTRAR</button>
                 </div>
-                <div>
-                     <label class="text-[10px] text-gray-500 uppercase font-bold">Buscar x Cliente/ID</label>
-                     <input type="text" id="reportSearch" placeholder="..." class="cyber-input w-full p-2 text-sm">
-                </div>
-                <button onclick="generateReport()" class="cyber-btn bg-[#00f3ff] text-black h-[42px] flex items-center justify-center gap-2 font-bold"><i data-lucide="filter"></i> FILTRAR</button>
             </div>
 
             <div class="flex gap-2">
@@ -178,57 +188,96 @@
             </div>
         </div>
 
-        <!-- VISTA CONFIGURACIÓN (CATEGORÍAS Y PAGOS) -->
+        <!-- VISTA LANDING (PORTADA & REDES) -->
+        <div id="view-landing" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
+            <div class="flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur z-10 py-4 border-b border-[#222]">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="layout-template"></i> PORTADA & REDES</h2>
+                <button onclick="saveLandingConfig()" class="cyber-btn bg-[#ff003c] text-white px-6 py-3 flex items-center gap-2"><i data-lucide="save"></i> GUARDAR</button>
+            </div>
+            <div class="max-w-4xl mx-auto space-y-8">
+                <!-- SECCIÓN APARIENCIA -->
+                <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-6">
+                     <h3 class="text-[#ccff00] font-bold border-b border-[#333] pb-2">APARIENCIA WEB</h3>
+                     <div class="space-y-2">
+                         <label class="text-[10px] text-gray-500 uppercase font-bold">LOGO DE LA TIENDA (Para Facturas y Web)</label>
+                         <div class="flex gap-2">
+                             <input id="landingLogo" class="cyber-input flex-1 p-2 text-[#00f3ff]" placeholder="https://...">
+                             <div class="upload-area w-10 flex items-center justify-center bg-[#111]">
+                                 <input type="file" accept="image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" onchange="window.uploadGenericImage(this, 'landingLogo')">
+                                 <i data-lucide="upload" width="16" class="text-gray-500"></i>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="space-y-2">
+                         <label class="text-[10px] text-gray-500 uppercase font-bold">FONDO DE PORTADA</label>
+                         <div class="flex gap-2">
+                             <input id="landingBgImage" class="cyber-input flex-1 p-2" placeholder="https://...">
+                             <div class="upload-area w-10 flex items-center justify-center bg-[#111]">
+                                 <input type="file" accept="image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" onchange="window.uploadGenericImage(this, 'landingBgImage')">
+                                 <i data-lucide="upload" width="16" class="text-gray-500"></i>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="grid md:grid-cols-2 gap-4">
+                         <div><label class="text-[10px] text-gray-500">TÍTULO PRINCIPAL</label><input id="landingTitle" class="cyber-input w-full p-2"></div>
+                         <div><label class="text-[10px] text-gray-500">SUBTÍTULO</label><input id="landingSubtitle" class="cyber-input w-full p-2"></div>
+                         <div><label class="text-[10px] text-gray-500">TEXTO BOTÓN</label><input id="landingBtnText" class="cyber-input w-full p-2" placeholder="VER CATÁLOGO"></div>
+                         <div><label class="text-[10px] text-gray-500">URL TIENDA (Botón)</label><input id="landingStoreUrl" class="cyber-input w-full p-2"></div>
+                     </div>
+                </div>
+
+                <!-- SECCIÓN REDES (FOOTER) -->
+                <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-6">
+                     <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2">REDES SOCIALES (PIE DE PÁGINA)</h3>
+                     <div class="grid md:grid-cols-2 gap-4">
+                         <div><label class="text-[10px] text-gray-500">INSTAGRAM (Usuario o URL)</label><input id="landingInsta" class="cyber-input w-full p-2"></div>
+                         <div><label class="text-[10px] text-gray-500">TIKTOK (Usuario o URL)</label><input id="landingTiktok" class="cyber-input w-full p-2"></div>
+                         <div class="col-span-2"><label class="text-[10px] text-gray-500">WHATSAPP (Número con código, ej: 50588888888)</label><input id="landingWhatsapp" class="cyber-input w-full p-2 text-[#ccff00] font-bold"></div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA CONFIGURACIÓN (CATEGORÍAS Y PAGOS MEJORADOS) -->
         <div id="view-config" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur z-10 py-4 border-b border-[#222]">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="settings"></i> CONFIGURACIÓN DE TIENDA</h2>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="settings"></i> AJUSTES DE TIENDA</h2>
                 <button onclick="saveGlobalConfig()" class="cyber-btn bg-[#ccff00] text-black px-6 py-2 flex items-center gap-2"><i data-lucide="save"></i> GUARDAR CAMBIOS</button>
             </div>
-
             <div class="grid md:grid-cols-2 gap-8">
-                <!-- COLUMNA 1: APARIENCIA Y CATEGORÍAS -->
+                <!-- CATEGORÍAS -->
                 <div class="space-y-6">
-                    <div class="bg-[#0a0a0a] border border-[#222] p-6">
-                        <h3 class="text-[#ccff00] font-bold border-b border-[#333] pb-2 mb-4">GENERAL</h3>
-                        <div class="space-y-4">
-                            <div><label class="text-[10px] text-gray-500">NOMBRE TIENDA</label><input id="confTitle" class="cyber-input w-full p-2"></div>
-                            <div><label class="text-[10px] text-gray-500">LOGO URL</label><input id="confLogo" class="cyber-input w-full p-2"></div>
-                            <div><label class="text-[10px] text-gray-500">BANNER URL</label><input id="confBanner" class="cyber-input w-full p-2"></div>
-                        </div>
-                    </div>
-
                     <div class="bg-[#0a0a0a] border border-[#222] p-6">
                         <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2 mb-4 flex justify-between items-center">
                             CATEGORÍAS DE PRODUCTOS
-                            <button onclick="addCategoryInput()" class="text-xs bg-[#111] px-2 py-1 hover:text-white border border-[#333]">+ AGREGAR</button>
                         </h3>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="newCategoryInput" placeholder="NUEVA CATEGORÍA..." class="cyber-input flex-1 p-2 text-xs uppercase">
+                            <button onclick="addCategoryUI()" class="bg-[#ccff00] text-black px-4 text-xs font-bold hover:bg-white">AGREGAR</button>
+                        </div>
                         <div id="categoriesContainer" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></div>
                     </div>
                 </div>
-
-                <!-- COLUMNA 2: MÉTODOS DE PAGO Y REDES -->
+                
+                <!-- MÉTODOS DE PAGO AVANZADOS -->
                 <div class="space-y-6">
                      <div class="bg-[#0a0a0a] border border-[#222] p-6">
-                        <h3 class="text-[#ff003c] font-bold border-b border-[#333] pb-2 mb-4">MÉTODOS DE PAGO (ECOMMERCE)</h3>
-                        <p class="text-[10px] text-gray-500 mb-4">Configura cuentas bancarias, billeteras móviles o sube QR para que aparezcan en el checkout de la web.</p>
-                        
+                        <h3 class="text-[#ff003c] font-bold border-b border-[#333] pb-2 mb-4">MÉTODOS DE PAGO</h3>
+                        <p class="text-[10px] text-gray-500 mb-4">Configura Cuentas Bancarias o Links de Pago. Usa el "Nombre Interno" para vincular un Link específico a un producto.</p>
                         <div id="paymentMethodsContainer" class="space-y-4"></div>
-                        <button onclick="addPaymentMethodInput()" class="w-full py-2 border border-dashed border-[#333] text-gray-500 text-xs hover:border-[#ccff00] hover:text-[#ccff00] mt-4">+ NUEVO MÉTODO DE PAGO</button>
-                     </div>
-
-                     <div class="bg-[#0a0a0a] border border-[#222] p-6">
-                        <h3 class="text-white font-bold border-b border-[#333] pb-2 mb-4">REDES SOCIALES</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                             <div><label class="text-[10px] text-gray-500">WHATSAPP (Sin +)</label><input id="confWhatsapp" class="cyber-input w-full p-2" placeholder="50588888888"></div>
-                             <div><label class="text-[10px] text-gray-500">INSTAGRAM</label><input id="confInsta" class="cyber-input w-full p-2"></div>
-                        </div>
+                        <button onclick="addPaymentMethodInput()" class="w-full py-4 border border-dashed border-[#333] text-gray-500 text-xs hover:border-[#ccff00] hover:text-[#ccff00] mt-4 flex items-center justify-center gap-2 font-bold"><i data-lucide="plus"></i> AGREGAR MÉTODO DE PAGO</button>
                      </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- MODALES -->
+    <!-- NOTIFICACIÓN FLOTANTE (NUEVAS ÓRDENES) -->
+    <button id="newOrdersAlert" onclick="refreshOrdersManual()" class="hidden floating-alert bg-[#ff003c] text-white px-6 py-3 shadow-[0_0_20px_#ff003c] font-bold flex items-center gap-3 rounded-sm hover:scale-105 transition-transform">
+        <i data-lucide="bell-ring" class="animate-bounce"></i>
+        <span><span id="newOrdersCount">0</span> NUEVAS ÓRDENES</span>
+        <span class="bg-white text-black text-[10px] px-1 rounded ml-2">ACTUALIZAR</span>
+    </button>
 
     <!-- MODAL PRODUCTO -->
     <div id="productModal" class="fixed inset-0 z-50 hidden">
@@ -257,6 +306,17 @@
                     <select id="categorySelect" class="cyber-input w-full p-3 text-sm uppercase cursor-pointer"></select>
                 </div>
                 
+                <!-- VINCULACIÓN DE LINK DE PAGO -->
+                <div class="bg-[#111] p-3 border border-l-2 border-[#00f3ff]">
+                    <label class="text-[10px] text-[#00f3ff] font-bold uppercase flex items-center gap-2">
+                        <i data-lucide="link"></i> LINK DE PAGO DIRECTO (OPCIONAL)
+                    </label>
+                    <p class="text-[9px] text-gray-500 mb-2">Si seleccionas uno, el botón de compra llevará directo a este link.</p>
+                    <select id="linkedPaymentMethod" class="cyber-input w-full p-2 text-xs uppercase cursor-pointer text-[#00f3ff]">
+                        <option value="">-- Usar Checkout Normal --</option>
+                    </select>
+                </div>
+                
                 <!-- CONTROL DE STOCK -->
                 <div class="bg-[#0a0a0a] border border-[#333] p-3 rounded-sm">
                     <label class="text-xs font-bold text-[#ccff00] mb-2 block flex justify-between">
@@ -280,7 +340,7 @@
                         <input type="text" id="manualImageUrl" placeholder="Pegar URL existente..." class="cyber-input flex-1 p-2 text-xs text-gray-400" onchange="updatePreviewFromUrl()">
                     </div>
                     <div class="border border-dashed border-[#333] p-4 text-center hover:border-[#ccff00] transition-colors relative group cursor-pointer">
-                        <input type="file" id="imageFile" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleImageUpload(this)">
+                        <input type="file" id="imageFile" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="window.uploadGenericImage(this, 'currentImageUrl', 'imgPreview')">
                         <div class="text-xs text-gray-500 group-hover:text-white pointer-events-none">
                             <i data-lucide="upload-cloud" class="mx-auto mb-2"></i>
                             Clic para subir nueva imagen
@@ -361,8 +421,11 @@
 
                     <div id="paymentProofContainer" class="mt-8 hidden">
                         <h4 class="text-[#00f3ff] font-bold mb-2 uppercase text-xs">Comprobante de Pago</h4>
-                        <a id="proofLink" href="#" target="_blank" class="block w-full h-32 border border-dashed border-[#333] hover:border-[#00f3ff] flex items-center justify-center bg-[#111]">
-                            <img id="proofImg" src="" class="h-full object-contain hidden">
+                        <a id="proofLink" href="#" target="_blank" class="block w-full h-48 border border-dashed border-[#333] hover:border-[#00f3ff] flex items-center justify-center bg-[#111] relative group">
+                            <img id="proofImg" src="" class="h-full w-full object-contain hidden">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="text-white text-xs font-bold">CLIC PARA AMPLIAR</span>
+                            </div>
                             <span id="proofText" class="text-xs text-gray-500">Ver Comprobante</span>
                         </a>
                     </div>
@@ -384,7 +447,7 @@
     <!-- LOGICA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, serverTimestamp, query, orderBy, onSnapshot, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, serverTimestamp, query, orderBy, onSnapshot, writeBatch, increment, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         
         const IMGBB_API_KEY = "b922654effe3a1ab5ac85cc4c23f97b8"; 
@@ -396,19 +459,22 @@
         let allOrders = [];
         let posCart = [];
         let globalConfig = { categories: [], paymentMethods: [] };
+        let landingConfig = { logo: "" };
         let currentOrderView = null;
         let unsubscribeProducts = null;
-        let unsubscribeOrders = null;
+        let unsubscribeNewOrders = null;
         let lastGeneratedPdfBlob = null;
+        let initialLoadTime = null;
 
         // --- AUTH ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-overlay').classList.add('hidden');
-                initRealtimeListeners();
+                initialLoadTime = new Date();
+                initData();
             } else {
                 if(unsubscribeProducts) unsubscribeProducts();
-                if(unsubscribeOrders) unsubscribeOrders();
+                if(unsubscribeNewOrders) unsubscribeNewOrders();
                 document.getElementById('login-overlay').classList.remove('hidden');
             }
         });
@@ -426,20 +492,26 @@
         });
         window.logout = () => signOut(auth);
 
-        // --- INICIALIZACIÓN DE DATOS (REALTIME) ---
-        async function initRealtimeListeners() {
-            // Cargar Configuración primero
+        // --- INICIALIZACIÓN DE DATOS ---
+        async function initData() {
             try {
                 const s = await getDoc(doc(db, "settings", "store_config"));
                 if(s.exists()) { 
                     globalConfig = s.data(); 
                     if(!globalConfig.categories) globalConfig.categories = ["GENERAL"];
                     if(!globalConfig.paymentMethods) globalConfig.paymentMethods = [];
-                    applyConfigToUI();
                 }
+                const l = await getDoc(doc(db, "settings", "landing_page_v2"));
+                if(l.exists()) { 
+                    landingConfig = l.data(); 
+                } else {
+                    const old = await getDoc(doc(db, "settings", "landing_page"));
+                    if(old.exists()) landingConfig = old.data();
+                }
+                applyConfigToUI();
+                applyLandingToUI();
             } catch(e) { console.log("Config init error", e); }
 
-            // Escuchar Productos
             const qProd = query(collection(db, "products"), orderBy("updatedAt", "desc"));
             unsubscribeProducts = onSnapshot(qProd, (snap) => {
                 products = snap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -447,35 +519,186 @@
                 renderPosGrid();
             });
 
-            // Escuchar Órdenes
-            const qOrd = query(collection(db, "orders"), orderBy("date", "desc"));
-            unsubscribeOrders = onSnapshot(qOrd, (snap) => {
-                allOrders = snap.docs.map(d => ({id:d.id, ...d.data()}));
-                renderOrdersTable();
-            });
+            await loadInitialOrders();
+            setupNewOrderListener();
         }
 
-        // --- RENDERIZADO PRODUCTOS ---
+        async function loadInitialOrders() {
+            const qOrd = query(collection(db, "orders"), orderBy("date", "desc"), limit(50));
+            const snap = await getDocs(qOrd);
+            allOrders = snap.docs.map(d => ({id:d.id, ...d.data()}));
+            renderOrdersTable();
+        }
+
+        function setupNewOrderListener() {
+            const qNew = query(collection(db, "orders"), where("date", ">", initialLoadTime));
+            unsubscribeNewOrders = onSnapshot(qNew, (snap) => {
+                if(!snap.empty) {
+                    const count = snap.size;
+                    document.getElementById('newOrdersCount').innerText = count;
+                    document.getElementById('newOrdersAlert').classList.remove('hidden');
+                }
+            });
+        }
+        
+        window.refreshOrdersManual = async () => {
+             document.getElementById('newOrdersAlert').classList.add('hidden');
+             const qOrd = query(collection(db, "orders"), orderBy("date", "desc"), limit(50));
+             const snap = await getDocs(qOrd);
+             allOrders = snap.docs.map(d => ({id:d.id, ...d.data()}));
+             renderOrdersTable();
+             initialLoadTime = new Date();
+             unsubscribeNewOrders();
+             setupNewOrderListener();
+        }
+
+        // --- GESTIÓN DE PRODUCTOS ---
+        window.tempVariants = {};
+        window.openModal = (id) => {
+            document.getElementById('productModal').classList.remove('hidden');
+            setTimeout(()=>document.getElementById('modalContent').classList.remove('translate-x-full'), 10);
+            
+            // Llenar categorías
+            const catSelect = document.getElementById('categorySelect');
+            catSelect.innerHTML = '<option value="">SIN CATEGORÍA</option>';
+            globalConfig.categories.forEach(c => {
+                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            // Llenar Links de Pago
+            const linkSelect = document.getElementById('linkedPaymentMethod');
+            linkSelect.innerHTML = '<option value="">-- Usar Checkout Normal --</option>';
+            globalConfig.paymentMethods.forEach(pm => {
+                if(pm.type === 'link') {
+                    linkSelect.innerHTML += `<option value="${pm.internalName}">${pm.internalName || 'Link Sin Nombre'}</option>`;
+                }
+            });
+
+            if(id) {
+                const p = products.find(x => x.id === id);
+                document.getElementById('modalTitle').innerText = "EDITAR ITEM";
+                document.getElementById('editId').value = p.id;
+                document.getElementById('name').value = p.name;
+                document.getElementById('price').value = p.price;
+                document.getElementById('comparePrice').value = p.comparePrice || '';
+                document.getElementById('currentImageUrl').value = p.image || '';
+                document.getElementById('manualImageUrl').value = p.image || '';
+                document.getElementById('description').value = p.description || '';
+                document.getElementById('categorySelect').value = p.category || '';
+                document.getElementById('linkedPaymentMethod').value = p.linkedPaymentMethod || ''; // Cargar el link vinculado
+                document.getElementById('isActive').checked = p.isActive !== false;
+                document.getElementById('btnDeleteProd').classList.remove('hidden');
+                if(p.image) {
+                    document.getElementById('imgPreview').src = p.image;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                } else {
+                    document.getElementById('imagePreviewContainer').classList.add('hidden');
+                }
+                window.tempVariants = {...p.variants};
+            } else {
+                document.getElementById('modalTitle').innerText = "NUEVO ITEM";
+                document.getElementById('editId').value = "";
+                document.getElementById('productForm').reset();
+                document.getElementById('currentImageUrl').value = "";
+                document.getElementById('manualImageUrl').value = "";
+                document.getElementById('imagePreviewContainer').classList.add('hidden');
+                document.getElementById('btnDeleteProd').classList.add('hidden');
+                window.tempVariants = {};
+            }
+            renderVariantsList();
+        }
+        // ... (Funciones de variantes y subida de imágenes permanecen, pero actualizamos uploadGenericImage)
+
+        // FUNCIÓN GENÉRICA PARA SUBIR IMÁGENES (Productos, Portada, QR Pagos)
+        window.uploadGenericImage = async (input, targetInputId, previewId = null) => {
+            const file = input.files[0];
+            if(!file) return;
+            const fd = new FormData();
+            fd.append("image", file);
+            
+            // Visual feedback
+            const parent = input.parentElement;
+            const originalBorder = parent.style.borderColor;
+            parent.style.borderColor = "#ccff00";
+            
+            try {
+                if(previewId) document.getElementById('uploadingSpinner').classList.remove('hidden'); // Solo si es producto
+                
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: fd });
+                const data = await res.json();
+                
+                if(data.success) {
+                    document.getElementById(targetInputId).value = data.data.url;
+                    // Si hay preview (producto)
+                    if(previewId) {
+                         const img = document.getElementById(previewId);
+                         if(img) {
+                             img.src = data.data.url;
+                             img.parentElement.classList.remove('hidden');
+                         }
+                         // Sync manual input if exists
+                         const manual = document.getElementById('manualImageUrl');
+                         if(manual) manual.value = data.data.url;
+                    }
+                    alert("Imagen subida correctamente");
+                } else { alert("Error al subir imagen"); }
+            } catch(err) { console.error(err); alert("Error de red"); }
+            finally {
+                 parent.style.borderColor = originalBorder || "#333";
+                 if(previewId) document.getElementById('uploadingSpinner').classList.add('hidden');
+            }
+        }
+        window.updatePreviewFromUrl = () => {
+            const url = document.getElementById('manualImageUrl').value;
+            document.getElementById('currentImageUrl').value = url;
+            if(url) {
+                document.getElementById('imgPreview').src = url;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            }
+        }
+        window.saveProductForm = async () => {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "GUARDANDO..."; btn.disabled = true;
+            const id = document.getElementById('editId').value;
+            const productData = {
+                name: document.getElementById('name').value,
+                price: parseFloat(document.getElementById('price').value) || 0,
+                comparePrice: parseFloat(document.getElementById('comparePrice').value) || 0,
+                image: document.getElementById('currentImageUrl').value,
+                variants: window.tempVariants, 
+                isActive: document.getElementById('isActive').checked,
+                category: document.getElementById('categorySelect').value,
+                linkedPaymentMethod: document.getElementById('linkedPaymentMethod').value, // GUARDAR EL LINK
+                description: document.getElementById('description').value,
+                updatedAt: serverTimestamp()
+            };
+            try {
+                if(id) { await updateDoc(doc(db, "products", id), productData); }
+                else { 
+                    productData.createdAt = serverTimestamp();
+                    await addDoc(collection(db, "products"), productData); 
+                }
+                closeModal();
+            } catch(e) { alert("Error guardando: " + e.message); }
+            btn.innerText = "GUARDAR DATOS"; btn.disabled = false;
+        }
+        // ... (Delete product, close modal, render products, pos logic etc - Unchanged)
+        
+        // --- RENDERIZADO PRODUCTOS Y POS (Reutilizando funciones previas) ---
         function renderProductsGrid() {
             const grid = document.getElementById('productsGrid');
             const search = document.getElementById('productSearch').value.toLowerCase();
             grid.innerHTML = '';
-            
             const filtered = products.filter(p => p.name.toLowerCase().includes(search));
-            
             filtered.forEach(p => {
-                let totalStock = 0;
-                let stockBadges = "";
-                
+                let totalStock = 0; let stockBadges = "";
                 if (p.variants) {
                     Object.entries(p.variants).forEach(([size, qty]) => {
-                        qty = Number(qty); // Forzar número
-                        totalStock += qty;
+                        qty = Number(qty); totalStock += qty;
                         const colorClass = qty > 0 ? 'text-gray-400' : 'text-red-500 font-bold';
                         stockBadges += `<span class="text-[10px] bg-[#111] px-1 border border-[#333] ${colorClass}">${size}:${qty}</span> `;
                     });
                 } else { totalStock = '∞'; }
-
                 const card = document.createElement('div');
                 card.className = `cyber-card p-3 flex flex-col gap-2 ${!p.isActive ? 'opacity-50 border-red-900' : ''}`;
                 card.innerHTML = `
@@ -490,66 +713,15 @@
                             <div class="text-[#ccff00] font-mono font-bold">C$ ${p.price}</div>
                             <button onclick="openModal('${p.id}')" class="text-[10px] bg-[#222] text-white px-2 py-1 hover:bg-white hover:text-black border border-[#333]">EDITAR</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 grid.appendChild(card);
             });
             if(filtered.length === 0) grid.innerHTML = '<div class="text-gray-500 text-xs col-span-4 text-center py-10">No se encontraron productos.</div>';
             lucide.createIcons();
         }
-
-        // --- GESTIÓN DE PRODUCTOS (MODAL) ---
-        window.tempVariants = {};
         
-        window.openModal = (id) => {
-            document.getElementById('productModal').classList.remove('hidden');
-            setTimeout(()=>document.getElementById('modalContent').classList.remove('translate-x-full'), 10);
-            
-            // Llenar Categorías
-            const catSelect = document.getElementById('categorySelect');
-            catSelect.innerHTML = '<option value="">SIN CATEGORÍA</option>';
-            globalConfig.categories.forEach(c => {
-                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
-
-            if(id) {
-                const p = products.find(x => x.id === id);
-                document.getElementById('modalTitle').innerText = "EDITAR ITEM";
-                document.getElementById('editId').value = p.id;
-                document.getElementById('name').value = p.name;
-                document.getElementById('price').value = p.price;
-                document.getElementById('comparePrice').value = p.comparePrice || '';
-                document.getElementById('currentImageUrl').value = p.image || '';
-                document.getElementById('manualImageUrl').value = p.image || '';
-                document.getElementById('description').value = p.description || '';
-                document.getElementById('categorySelect').value = p.category || '';
-                document.getElementById('isActive').checked = p.isActive !== false;
-                document.getElementById('btnDeleteProd').classList.remove('hidden');
-                
-                if(p.image) {
-                    document.getElementById('imgPreview').src = p.image;
-                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
-                } else {
-                    document.getElementById('imagePreviewContainer').classList.add('hidden');
-                }
-
-                window.tempVariants = {...p.variants};
-            } else {
-                document.getElementById('modalTitle').innerText = "NUEVO ITEM";
-                document.getElementById('editId').value = "";
-                document.getElementById('productForm').reset();
-                document.getElementById('currentImageUrl').value = "";
-                document.getElementById('manualImageUrl').value = "";
-                document.getElementById('imagePreviewContainer').classList.add('hidden');
-                document.getElementById('btnDeleteProd').classList.add('hidden');
-                window.tempVariants = {};
-            }
-            renderVariantsList();
-        }
-
         window.renderVariantsList = () => {
-            const el = document.getElementById('variantsList');
-            el.innerHTML = '';
+            const el = document.getElementById('variantsList'); el.innerHTML = '';
             Object.entries(window.tempVariants).forEach(([size, qty]) => {
                 el.innerHTML += `
                     <div class="flex justify-between items-center bg-[#111] p-2 border border-[#333] text-xs text-white group hover:border-[#ccff00]">
@@ -561,105 +733,20 @@
             document.getElementById('variantsData').value = JSON.stringify(window.tempVariants);
             lucide.createIcons();
         }
-        
         window.addVariant = () => {
             const s = document.getElementById('newVariantSize').value.toUpperCase().trim();
             const q = parseInt(document.getElementById('newVariantQty').value);
-            if(s && !isNaN(q)) {
-                window.tempVariants[s] = q;
-                document.getElementById('newVariantSize').value = '';
-                document.getElementById('newVariantQty').value = '';
-                renderVariantsList();
-            }
+            if(s && !isNaN(q)) { window.tempVariants[s] = q; document.getElementById('newVariantSize').value = ''; document.getElementById('newVariantQty').value = ''; renderVariantsList(); }
         }
         window.deleteVariant = (s) => { delete window.tempVariants[s]; renderVariantsList(); }
+        window.deleteProduct = async () => { if(confirm("¿Seguro?")) { const id = document.getElementById('editId').value; await deleteDoc(doc(db, "products", id)); closeModal(); } }
+        window.closeModal = () => { document.getElementById('modalContent').classList.add('translate-x-full'); setTimeout(()=>document.getElementById('productModal').classList.add('hidden'), 300); }
 
-        // --- SUBIDA IMÁGENES ---
-        window.handleImageUpload = async (input) => {
-            const file = input.files[0];
-            if(!file) return;
-            
-            const spinner = document.getElementById('uploadingSpinner');
-            const preview = document.getElementById('imgPreview');
-            const container = document.getElementById('imagePreviewContainer');
-            
-            container.classList.remove('hidden');
-            spinner.classList.remove('hidden');
-            
-            // Subir a ImgBB
-            const fd = new FormData();
-            fd.append("image", file);
-            try {
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: fd });
-                const data = await res.json();
-                if(data.success) {
-                    document.getElementById('currentImageUrl').value = data.data.url;
-                    document.getElementById('manualImageUrl').value = data.data.url;
-                    preview.src = data.data.url;
-                } else { alert("Error al subir imagen"); }
-            } catch(err) { console.error(err); alert("Error de red al subir imagen"); }
-            finally { spinner.classList.add('hidden'); }
-        }
-        
-        window.updatePreviewFromUrl = () => {
-            const url = document.getElementById('manualImageUrl').value;
-            document.getElementById('currentImageUrl').value = url;
-            if(url) {
-                document.getElementById('imgPreview').src = url;
-                document.getElementById('imagePreviewContainer').classList.remove('hidden');
-            }
-        }
-
-        window.saveProductForm = async () => {
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "GUARDANDO..."; btn.disabled = true;
-
-            const id = document.getElementById('editId').value;
-            // IMPORTANTE: Convertir a números para consistencia con Ecommerce
-            const productData = {
-                name: document.getElementById('name').value,
-                price: parseFloat(document.getElementById('price').value) || 0,
-                comparePrice: parseFloat(document.getElementById('comparePrice').value) || 0,
-                image: document.getElementById('currentImageUrl').value,
-                variants: window.tempVariants, // Ya tiene números
-                isActive: document.getElementById('isActive').checked,
-                category: document.getElementById('categorySelect').value,
-                description: document.getElementById('description').value,
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                if(id) { await updateDoc(doc(db, "products", id), productData); }
-                else { 
-                    productData.createdAt = serverTimestamp();
-                    await addDoc(collection(db, "products"), productData); 
-                }
-                closeModal();
-            } catch(e) { alert("Error guardando: " + e.message); }
-            btn.innerText = "GUARDAR DATOS"; btn.disabled = false;
-        }
-
-        window.deleteProduct = async () => {
-             if(confirm("¿Seguro que deseas eliminar este producto permanentemente?")) {
-                 const id = document.getElementById('editId').value;
-                 await deleteDoc(doc(db, "products", id));
-                 closeModal();
-             }
-        }
-        window.closeModal = () => { 
-            document.getElementById('modalContent').classList.add('translate-x-full'); 
-            setTimeout(()=>document.getElementById('productModal').classList.add('hidden'), 300); 
-        }
-
-        // --- POS & CAJA ---
-        window.filterProducts = () => renderProductsGrid(); // Vincula el buscador
-        window.filterPos = () => renderPosGrid();
-
-        function renderPosGrid() {
+        // --- POS (REUTILIZADO) ---
+        window.filterPos = () => {
              const container = document.getElementById('posGrid');
              const term = document.getElementById('posSearch').value.toLowerCase();
              container.innerHTML = '';
-             
              products.filter(p => p.isActive !== false && p.name.toLowerCase().includes(term)).forEach(p => {
                  container.innerHTML += `
                     <div onclick="addToPos('${p.id}')" class="bg-[#111] border border-[#333] p-2 cursor-pointer hover:border-[#ccff00] group transition-all">
@@ -671,62 +758,32 @@
                     </div>`;
              });
         }
-
         window.addToPos = (id) => {
              const p = products.find(x => x.id === id);
-             if(!p.variants || Object.keys(p.variants).length === 0) {
-                 addPosItem(p, 'U', 1);
-             } else {
-                 // Abrir selector de variantes
+             if(!p.variants || Object.keys(p.variants).length === 0) { addPosItem(p, 'U', 1); } else {
                  document.getElementById('posVariantProductName').innerText = p.name;
-                 const opts = document.getElementById('posVariantOptions');
-                 opts.innerHTML = '';
+                 const opts = document.getElementById('posVariantOptions'); opts.innerHTML = '';
                  Object.entries(p.variants).forEach(([size, qty]) => {
-                     qty = Number(qty);
-                     const disabled = qty <= 0;
-                     opts.innerHTML += `
-                        <button onclick="${disabled ? '' : `addPosItemFromModal('${id}', '${size}')`}" 
-                            class="p-3 border text-xs flex justify-between font-mono ${disabled ? 'border-red-900 bg-red-900/10 text-red-700 cursor-not-allowed' : 'border-[#333] hover:border-[#ccff00] hover:bg-[#222] text-white'}">
-                            <span>${size}</span> <span>${qty}</span>
-                        </button>`;
+                     qty = Number(qty); const disabled = qty <= 0;
+                     opts.innerHTML += `<button onclick="${disabled ? '' : `addPosItemFromModal('${id}', '${size}')`}" class="p-3 border text-xs flex justify-between font-mono ${disabled ? 'border-red-900 bg-red-900/10 text-red-700 cursor-not-allowed' : 'border-[#333] hover:border-[#ccff00] hover:bg-[#222] text-white'}"><span>${size}</span> <span>${qty}</span></button>`;
                  });
                  document.getElementById('posVariantModal').classList.remove('hidden');
              }
         }
-        window.addPosItemFromModal = (id, size) => {
-            const p = products.find(x => x.id === id);
-            addPosItem(p, size, 1);
-            closePosVariantModal();
-        }
+        window.addPosItemFromModal = (id, size) => { const p = products.find(x => x.id === id); addPosItem(p, size, 1); closePosVariantModal(); }
         window.closePosVariantModal = () => document.getElementById('posVariantModal').classList.add('hidden');
-
-        function addPosItem(product, size, qty) {
-            posCart.push({ ...product, size, qty });
-            renderPosCart();
-        }
-        
+        function addPosItem(product, size, qty) { posCart.push({ ...product, size, qty }); renderPosCart(); }
         window.renderPosCart = () => {
-            const c = document.getElementById('posCart'); c.innerHTML = '';
-            let total = 0;
+            const c = document.getElementById('posCart'); c.innerHTML = ''; let total = 0;
             if(posCart.length === 0) c.innerHTML = '<div class="text-center text-gray-700 text-xs mt-10 font-mono">ESPERANDO ITEMS...</div>';
-            
             posCart.forEach((item, idx) => {
                 total += item.price;
-                c.innerHTML += `
-                    <div class="flex justify-between items-center bg-[#111] p-2 border-l-2 border-[#ccff00] mb-1 animate-slide-up">
-                        <div class="text-xs">
-                            <div class="text-white font-bold">${item.name} (${item.size})</div>
-                            <div class="text-gray-500">C$ ${item.price}</div>
-                        </div>
-                        <button onclick="posCart.splice(${idx},1); renderPosCart()" class="text-red-500 hover:text-white"><i data-lucide="trash-2" width="12"></i></button>
-                    </div>`;
+                c.innerHTML += `<div class="flex justify-between items-center bg-[#111] p-2 border-l-2 border-[#ccff00] mb-1 animate-slide-up"><div class="text-xs"><div class="text-white font-bold">${item.name} (${item.size})</div><div class="text-gray-500">C$ ${item.price}</div></div><button onclick="posCart.splice(${idx},1); renderPosCart()" class="text-red-500 hover:text-white"><i data-lucide="trash-2" width="12"></i></button></div>`;
             });
             document.getElementById('posTotal').innerText = `C$ ${total.toFixed(2)}`;
             lucide.createIcons();
         }
         window.clearPosCart = () => { posCart = []; renderPosCart(); document.getElementById('posClientName').value = ""; document.getElementById('posClientPhone').value = ""; }
-        
-        // --- COBRO POS ---
         window.openPaymentModal = () => {
             if(posCart.length === 0) return alert("Carrito vacío");
             const total = posCart.reduce((a,b)=>a+b.price, 0);
@@ -735,308 +792,145 @@
             document.getElementById('confTotal').innerText = "C$ " + total.toFixed(2);
             document.getElementById('posPaymentModal').classList.remove('hidden');
         }
-        window.selectPayment = (m) => {
-            document.getElementById('selectedPaymentMethod').value = m;
-            document.querySelectorAll('.pay-opt').forEach(b => {
-                 b.classList.remove('bg-[#ccff00]', 'text-black');
-                 if(b.innerText.includes(m.toUpperCase())) b.classList.add('bg-[#ccff00]', 'text-black');
-            });
-        }
+        window.selectPayment = (m) => { document.getElementById('selectedPaymentMethod').value = m; document.querySelectorAll('.pay-opt').forEach(b => { b.classList.remove('bg-[#ccff00]', 'text-black'); if(b.innerText.includes(m.toUpperCase())) b.classList.add('bg-[#ccff00]', 'text-black'); }); }
         window.closePaymentModal = () => document.getElementById('posPaymentModal').classList.add('hidden');
-
         window.confirmPosSale = async () => {
-            const btn = document.getElementById('btnProcessPayment');
-            btn.innerText = "PROCESANDO..."; btn.disabled = true;
-
+            const btn = document.getElementById('btnProcessPayment'); btn.innerText = "PROCESANDO..."; btn.disabled = true;
             const total = posCart.reduce((a,b)=>a+b.price, 0);
             const dateCode = new Date().toISOString().slice(2,10).replace(/-/g,'');
             const rand = Math.floor(1000 + Math.random() * 9000);
             const orderId = `POS-${dateCode}-${rand}`;
-
-            const orderData = {
-                orderId,
-                date: serverTimestamp(),
-                customer: {
-                    name: document.getElementById('posClientName').value || "Cliente Mostrador",
-                    phone: document.getElementById('posClientPhone').value || "",
-                    address: "Venta Física",
-                    city: "Managua",
-                    department: "Managua"
-                },
-                items: posCart,
-                total: total,
-                paymentMethod: document.getElementById('selectedPaymentMethod').value,
-                status: 'completed',
-                source: 'POS'
-            };
-
-            const batch = writeBatch(db);
-            const orderRef = doc(collection(db, "orders"));
-            batch.set(orderRef, orderData);
-
-            // Actualizar stock atómicamente
-            posCart.forEach(item => {
-                if(item.variants) {
-                    const prodRef = doc(db, "products", item.id);
-                    batch.update(prodRef, { [`variants.${item.size}`]: increment(-1) });
-                }
-            });
-
-            await batch.commit();
-            
-            closePaymentModal();
-            clearPosCart();
-            btn.innerText = "FACTURAR"; btn.disabled = false;
-            
-            // Abrir la factura generada inmediatamente
-            openInvoiceViewer({ id: orderRef.id, ...orderData, date: { seconds: Date.now()/1000 } }); 
+            const orderData = { orderId, date: serverTimestamp(), customer: { name: document.getElementById('posClientName').value || "Cliente Mostrador", phone: document.getElementById('posClientPhone').value || "", address: "Venta Física", city: "Managua", department: "Managua" }, items: posCart, total: total, paymentMethod: document.getElementById('selectedPaymentMethod').value, status: 'completed', source: 'POS' };
+            const batch = writeBatch(db); const orderRef = doc(collection(db, "orders")); batch.set(orderRef, orderData);
+            posCart.forEach(item => { if(item.variants) { const prodRef = doc(db, "products", item.id); batch.update(prodRef, { [`variants.${item.size}`]: increment(-1) }); } });
+            await batch.commit(); closePaymentModal(); clearPosCart(); btn.innerText = "FACTURAR"; btn.disabled = false; refreshOrdersManual(); openInvoiceViewer({ id: orderRef.id, ...orderData, date: { seconds: Date.now()/1000 } }); 
         }
 
-        // --- ÓRDENES Y FACTURACIÓN ---
-        function renderOrdersTable() {
-            const tbody = document.getElementById('ordersTableBody');
-            tbody.innerHTML = '';
-            
-            allOrders.forEach(o => {
-                const date = o.date ? new Date(o.date.seconds*1000).toLocaleDateString() : '-';
-                let statusColor = 'text-yellow-500';
-                if(o.status === 'completed') statusColor = 'text-green-500';
-                if(o.status === 'cancelled') statusColor = 'text-red-500';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-[#111] transition-colors border-b border-[#222]">
-                        <td class="p-4 text-[#ccff00]">${o.orderId || 'N/A'}</td>
-                        <td class="p-4 text-gray-500">${date}</td>
-                        <td class="p-4 font-bold text-white">${o.customer?.name || 'Anon'}</td>
-                        <td class="p-4">C$ ${o.total.toFixed(2)}</td>
-                        <td class="p-4 text-gray-400 text-[10px] uppercase">${o.paymentMethod}</td>
-                        <td class="p-4 ${statusColor} font-bold uppercase">${o.status}</td>
-                        <td class="p-4">
-                            <button onclick="viewOrderDetails('${o.id}')" class="bg-[#222] text-white hover:bg-[#ccff00] hover:text-black p-2 rounded-sm transition-colors"><i data-lucide="eye" width="16"></i></button>
-                        </td>
-                    </tr>`;
-            });
-            lucide.createIcons();
+        // --- ÓRDENES Y REPORTES (Reutilizados de V7.3) ---
+        window.filterOrders = () => {
+             const term = document.getElementById('orderSearchInput').value.toLowerCase();
+             const tbody = document.getElementById('ordersTableBody'); tbody.innerHTML = '';
+             allOrders.filter(o => (o.orderId || '').toLowerCase().includes(term) || (o.customer?.name || '').toLowerCase().includes(term)
+             ).forEach(o => renderOrderRow(o, tbody)); lucide.createIcons();
         }
-
-        window.viewOrderDetails = (id) => {
-            const order = allOrders.find(o => o.id === id);
-            openInvoiceViewer(order);
+        function renderOrdersTable() { const tbody = document.getElementById('ordersTableBody'); tbody.innerHTML = ''; allOrders.forEach(o => renderOrderRow(o, tbody)); lucide.createIcons(); }
+        function renderOrderRow(o, tbody) {
+             const date = o.date ? new Date(o.date.seconds*1000).toLocaleDateString() : '-';
+             let statusColor = 'text-yellow-500'; if(o.status === 'completed') statusColor = 'text-green-500'; if(o.status === 'cancelled') statusColor = 'text-red-500';
+             tbody.innerHTML += `<tr class="hover:bg-[#111] transition-colors border-b border-[#222]"><td class="p-4 text-[#ccff00]">${o.orderId || 'N/A'}</td><td class="p-4 text-gray-500">${date}</td><td class="p-4 font-bold text-white">${o.customer?.name || 'Anon'}</td><td class="p-4">C$ ${o.total.toFixed(2)}</td><td class="p-4 text-[#00f3ff]">${o.shipping > 0 ? 'C$ '+o.shipping : '-'}</td><td class="p-4 text-gray-400 text-[10px] uppercase">${o.paymentMethod}</td><td class="p-4 ${statusColor} font-bold uppercase">${o.status}</td><td class="p-4"><button onclick="viewOrderDetails('${o.id}')" class="bg-[#222] text-white hover:bg-[#ccff00] hover:text-black p-2 rounded-sm transition-colors"><i data-lucide="eye" width="16"></i></button></td></tr>`;
         }
+        window.viewOrderDetails = (id) => { const order = allOrders.find(o => o.id === id); openInvoiceViewer(order); }
 
         async function openInvoiceViewer(order) {
-            currentOrderView = order;
-            document.getElementById('viewerOrderId').innerText = "#" + order.orderId;
-            
-            // Llenar panel izquierdo
+            currentOrderView = order; document.getElementById('viewerOrderId').innerText = "#" + order.orderId;
+            const cust = order.customer || {};
+            let department = "N/A"; if(order.address && order.address.department) department = order.address.department; else if(cust.department) department = cust.department;
+            let fullAddress = "Sin dirección";
+            if(order.address && order.address.address) { fullAddress = `${order.address.address}, ${order.address.neighborhood || ''}`; } else if (cust.detail) { fullAddress = cust.detail; } else if (cust.address) { fullAddress = cust.address; }
+            const shippingCost = order.shipping || order.shippingCost || 0;
             const d = document.getElementById('orderDetailPanel');
-            d.innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div><span class="text-gray-500 text-[10px] uppercase block">Cliente</span><span class="text-white font-bold">${order.customer.name}</span></div>
-                    <div><span class="text-gray-500 text-[10px] uppercase block">Teléfono</span><span class="text-[#ccff00] font-mono">${order.customer.phone}</span></div>
-                </div>
-                <div class="mb-4">
-                    <span class="text-gray-500 text-[10px] uppercase block">Dirección de Entrega</span>
-                    <div class="bg-[#111] p-2 border border-[#333] mt-1 text-xs">
-                        ${order.customer.address}<br>
-                        <span class="text-gray-400">${order.customer.city || ''}, ${order.customer.department || ''}</span>
-                    </div>
-                </div>
-                <div class="bg-[#111] p-3 border border-[#333]">
-                    <span class="text-gray-500 text-[10px] uppercase block mb-2">Items</span>
-                    ${order.items.map(i => `<div class="flex justify-between text-xs mb-1"><span>${i.qty}x ${i.name} (${i.size})</span><span>C$ ${i.price}</span></div>`).join('')}
-                    <div class="border-t border-[#333] mt-2 pt-2 flex justify-between font-bold text-[#ccff00]"><span>TOTAL</span><span>C$ ${order.total.toFixed(2)}</span></div>
-                </div>
-            `;
-            
-            // Estado y Pago
+            d.innerHTML = `<div class="grid grid-cols-2 gap-4 mb-4"><div><span class="text-gray-500 text-[10px] uppercase block">Cliente</span><span class="text-white font-bold">${cust.name}</span></div><div><span class="text-gray-500 text-[10px] uppercase block">Teléfono</span><span class="text-[#ccff00] font-mono">${cust.phone}</span></div></div><div class="mb-4"><span class="text-gray-500 text-[10px] uppercase block">Dirección de Entrega</span><div class="bg-[#111] p-2 border border-[#333] mt-1 text-xs">${fullAddress}<br><span class="text-gray-400">${department}</span>${order.destination ? `<a href="https://maps.google.com/?q=${order.destination.lat},${order.destination.lng}" target="_blank" class="text-[#ff003c] block mt-1 hover:underline">Ver GPS Map</a>` : ''}</div></div><div class="bg-[#111] p-3 border border-[#333]"><span class="text-gray-500 text-[10px] uppercase block mb-2">Items</span>${order.items.map(i => `<div class="flex justify-between text-xs mb-1"><span>${i.qty}x ${i.name} (${i.size})</span><span>C$ ${i.price}</span></div>`).join('')}${shippingCost > 0 ? `<div class="flex justify-between text-xs mb-1 border-t border-[#222] pt-1 text-[#00f3ff]"><span>Envío (${department})</span><span>C$ ${shippingCost}</span></div>` : ''}<div class="border-t border-[#333] mt-2 pt-2 flex justify-between font-bold text-[#ccff00]"><span>TOTAL</span><span>C$ ${order.total.toFixed(2)}</span></div></div>`;
             document.getElementById('orderStatusUpdate').value = order.status;
-            const proofContainer = document.getElementById('paymentProofContainer');
-            if(order.paymentProof) {
-                proofContainer.classList.remove('hidden');
-                document.getElementById('proofLink').href = order.paymentProof;
-                document.getElementById('proofImg').src = order.paymentProof;
-                document.getElementById('proofImg').classList.remove('hidden');
-            } else {
-                proofContainer.classList.add('hidden');
-            }
-
-            // Generar PDF
-            generatePDF(order);
-
-            // Listeners botones
-            document.getElementById('btnUpdateStatus').onclick = async () => {
-                const newStatus = document.getElementById('orderStatusUpdate').value;
-                await updateDoc(doc(db, "orders", order.id), { status: newStatus });
-                alert("Estado actualizado");
-            };
-            document.getElementById('btnWhatsapp').onclick = () => {
-                const text = `Hola ${order.customer.name}, te escribimos de ${globalConfig.title || 'KURA'}. Te enviamos tu factura de la orden ${order.orderId}.`;
-                window.open(`https://wa.me/505${order.customer.phone}?text=${encodeURIComponent(text)}`, '_blank');
-            };
-            document.getElementById('btnPrint').onclick = () => {
-                if(lastGeneratedPdfBlob) {
-                     const url = URL.createObjectURL(lastGeneratedPdfBlob);
-                     const w = window.open(url);
-                     w.onload = () => w.print();
-                }
-            };
-
+            const proofUrl = order.receiptUrl || order.paymentProof || order.paymentReceipt || order.voucherUrl || order.receipt;
+            const proofContainer = document.getElementById('paymentProofContainer'); const proofImg = document.getElementById('proofImg');
+            if(proofUrl) { proofContainer.classList.remove('hidden'); document.getElementById('proofLink').href = proofUrl; proofImg.src = proofUrl; proofImg.classList.remove('hidden'); } else { proofContainer.classList.add('hidden'); }
+            generatePDF(order, fullAddress, department, shippingCost);
+            document.getElementById('btnUpdateStatus').onclick = async () => { const newStatus = document.getElementById('orderStatusUpdate').value; await updateDoc(doc(db, "orders", order.id), { status: newStatus }); order.status = newStatus; renderOrdersTable(); alert("Estado actualizado"); };
+            document.getElementById('btnWhatsapp').onclick = () => { const text = `Hola ${cust.name}, te enviamos tu factura de la orden ${order.orderId}.`; window.open(`https://wa.me/505${cust.phone}?text=${encodeURIComponent(text)}`, '_blank'); };
+            document.getElementById('btnPrint').onclick = () => { if(lastGeneratedPdfBlob) { const url = URL.createObjectURL(lastGeneratedPdfBlob); const w = window.open(url); w.onload = () => w.print(); } };
             document.getElementById('invoiceViewerModal').classList.remove('hidden');
         }
-
         window.closeInvoiceViewerModal = () => document.getElementById('invoiceViewerModal').classList.add('hidden');
-
-        // --- GENERADOR PDF (FACTURA) ---
-        function generatePDF(o) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            const logo = globalConfig.logo || "";
-            const title = globalConfig.title || "KURA STUDIO";
-            
-            // Header
+        function generatePDF(o, address, dept, shipping) {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            const logo = landingConfig.logo || globalConfig.logo || ""; const title = landingConfig.title || globalConfig.title || "KURA STUDIO";
             if(logo) { try { doc.addImage(logo, 'JPEG', 15, 10, 25, 25); } catch(e){} }
-            
             doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text(title.toUpperCase(), 195, 20, { align: "right" });
-            doc.setFontSize(10); doc.setFont("helvetica", "normal");
-            doc.text("RUC: J0310000XXXXXX", 195, 26, { align: "right" });
-            doc.text("Managua, Nicaragua", 195, 31, { align: "right" });
-            
-            // Info Factura
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text("RUC: J0310000XXXXXX", 195, 26, { align: "right" });
             doc.setFillColor(240, 240, 240); doc.rect(15, 40, 180, 25, 'F');
-            doc.setFont("helvetica", "bold");
-            doc.text("FACTURAR A:", 20, 48);
-            doc.text(`ORDEN #${o.orderId}`, 140, 48);
-            
-            doc.setFont("helvetica", "normal");
-            doc.text(o.customer.name, 20, 54);
-            doc.text(o.customer.address || "Dirección no especificada", 20, 59);
-            doc.text(`${o.customer.city || ''} ${o.customer.department || ''}`, 20, 64); // Departamento añadido
-            
+            doc.setFont("helvetica", "bold"); doc.text("FACTURAR A:", 20, 48); doc.text(`ORDEN #${o.orderId}`, 140, 48);
+            const cust = o.customer || {};
+            doc.setFont("helvetica", "normal"); doc.text(cust.name, 20, 54); 
+            const splitAddress = doc.splitTextToSize(address, 100); doc.text(splitAddress, 20, 59);
+            let currentY = 59 + (splitAddress.length * 4); doc.text(`${dept}`, 20, currentY);
             const dateStr = o.date && o.date.seconds ? new Date(o.date.seconds*1000).toLocaleDateString() : new Date().toLocaleDateString();
             doc.text(`Fecha: ${dateStr}`, 140, 54);
-            doc.text(`Método: ${o.paymentMethod}`, 140, 59);
-
-            // Tabla Items
-            const body = o.items.map(i => [
-                i.qty, 
-                `${i.name} - ${i.size}`, 
-                `C$ ${i.price.toFixed(2)}`, 
-                `C$ ${(i.price * i.qty).toFixed(2)}`
-            ]);
-            
-            doc.autoTable({
-                startY: 75,
-                head: [['CANT', 'DESCRIPCIÓN', 'PRECIO UNIT.', 'SUBTOTAL']],
-                body: body,
-                theme: 'plain',
-                headStyles: { fillColor: [0,0,0], textColor: [255,255,255], fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 3 },
-                columnStyles: { 0: {halign: 'center'}, 2: {halign: 'right'}, 3: {halign: 'right'} }
-            });
-
-            // Totales
-            const finalY = doc.lastAutoTable.finalY + 10;
-            doc.setFont("helvetica", "bold"); doc.setFontSize(14);
-            doc.text(`TOTAL: C$ ${o.total.toFixed(2)}`, 195, finalY, { align: "right" });
-            
-            // Footer
-            doc.setFontSize(8); doc.setFont("helvetica", "italic"); text: "#888";
-            doc.text("Gracias por su compra. No se aceptan devoluciones después de 30 días.", 105, 280, { align: "center" });
-
-            const blob = doc.output('blob');
-            lastGeneratedPdfBlob = blob;
-            document.getElementById('pdfViewer').src = URL.createObjectURL(blob);
+            const body = o.items.map(i => [i.qty, `${i.name} - ${i.size}`, `C$ ${i.price.toFixed(2)}`, `C$ ${(i.price * i.qty).toFixed(2)}`]);
+            if(shipping > 0) { body.push(['-', `ENVÍO A ${dept}`, `C$ ${shipping}`, `C$ ${shipping}`]); }
+            doc.autoTable({ startY: currentY + 10, head: [['CANT', 'DESCRIPCIÓN', 'PRECIO UNIT.', 'SUBTOTAL']], body: body, theme: 'plain', headStyles: { fillColor: [0,0,0], textColor: [255,255,255], fontStyle: 'bold' }, styles: { fontSize: 10, cellPadding: 3 }, columnStyles: { 0: {halign: 'center'}, 2: {halign: 'right'}, 3: {halign: 'right'} } });
+            const finalY = doc.lastAutoTable.finalY + 10; doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text(`TOTAL: C$ ${o.total.toFixed(2)}`, 195, finalY, { align: "right" }); doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.text("Gracias por su compra.", 105, 280, { align: "center" });
+            const blob = doc.output('blob'); lastGeneratedPdfBlob = blob; document.getElementById('pdfViewer').src = URL.createObjectURL(blob);
         }
 
-        // --- REPORTES Y EXCEL ---
-        window.generateReport = () => {
-             const start = document.getElementById('reportStartDate').value;
-             const end = document.getElementById('reportEndDate').value;
-             const term = document.getElementById('reportSearch').value.toLowerCase();
-             
-             let filtered = allOrders.filter(o => o.status === 'completed'); // Solo ventas reales
-             
-             if(start) filtered = filtered.filter(o => new Date(o.date.seconds*1000) >= new Date(start));
-             if(end) filtered = filtered.filter(o => new Date(o.date.seconds*1000) <= new Date(end + "T23:59:59"));
-             if(term) filtered = filtered.filter(o => o.orderId.toLowerCase().includes(term) || o.customer.name.toLowerCase().includes(term));
-             
-             window.currentReportData = filtered;
-             
-             const tbody = document.getElementById('reportsTableBody');
-             tbody.innerHTML = '';
-             let total = 0;
-             
-             filtered.forEach(o => {
-                 total += o.total;
-                 tbody.innerHTML += `<tr><td class="p-3 text-gray-500">${new Date(o.date.seconds*1000).toLocaleDateString()}</td><td class="p-3 text-[#ccff00]">${o.orderId}</td><td class="p-3 text-white">${o.customer.name}</td><td class="p-3 text-right">C$ ${o.total.toFixed(2)}</td></tr>`;
+        // --- MÉTODOS DE PAGO (MEJORADO V8) ---
+        function renderPaymentConfig() {
+             const c = document.getElementById('paymentMethodsContainer'); c.innerHTML = '';
+             globalConfig.paymentMethods.forEach((pm, idx) => {
+                 let extraFields = '';
+                 // TIPO BANCO
+                 if(pm.type === 'bank') {
+                     extraFields = `
+                         <div class="grid grid-cols-3 gap-2">
+                             <input class="cyber-input p-2 text-xs" value="${pm.bankName || ''}" onchange="updatePaymentMethod(${idx}, 'bankName', this.value)" placeholder="Nombre Banco">
+                             <input class="cyber-input p-2 text-xs font-mono" value="${pm.accountNumber || ''}" onchange="updatePaymentMethod(${idx}, 'accountNumber', this.value)" placeholder="No. Cuenta">
+                             <input class="cyber-input p-2 text-xs" value="${pm.holderName || ''}" onchange="updatePaymentMethod(${idx}, 'holderName', this.value)" placeholder="Titular">
+                         </div>`;
+                 } 
+                 // TIPO LINK DE PAGO
+                 else if (pm.type === 'link') {
+                     extraFields = `
+                        <div class="space-y-2 bg-[#050505] p-2 border border-[#333]">
+                             <input class="cyber-input w-full p-2 text-xs text-[#00f3ff]" value="${pm.linkUrl || ''}" onchange="updatePaymentMethod(${idx}, 'linkUrl', this.value)" placeholder="URL del Link de Pago">
+                             
+                             <div class="flex gap-2 items-center">
+                                 <input id="pm_qr_${idx}" class="cyber-input flex-1 p-2 text-xs text-gray-500" value="${pm.qrUrl || ''}" onchange="updatePaymentMethod(${idx}, 'qrUrl', this.value)" placeholder="URL Imagen QR">
+                                 <div class="upload-area w-10 h-10 flex items-center justify-center bg-[#111]">
+                                     <input type="file" accept="image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" onchange="uploadGenericImage(this, 'pm_qr_${idx}')">
+                                     <i data-lucide="upload" width="16" class="text-gray-500"></i>
+                                 </div>
+                             </div>
+                        </div>`;
+                 }
+                 
+                 c.innerHTML += `
+                    <div class="bg-[#111] p-4 border border-[#333] relative group space-y-3">
+                        <button onclick="removePaymentMethod(${idx})" class="absolute top-2 right-2 text-red-500 hover:text-white">X</button>
+                        
+                        <div class="flex gap-2 items-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase w-24">IDENTIFICADOR INTERNO:</span>
+                            <input class="cyber-input flex-1 p-2 text-xs font-mono text-[#ccff00] border-[#ccff00]/50" value="${pm.internalName || ''}" onchange="updatePaymentMethod(${idx}, 'internalName', this.value)" placeholder="Ej: Link Camisa Yugi - Managua">
+                        </div>
+
+                        <div class="flex gap-2">
+                            <select class="cyber-input w-1/3 p-2 text-xs uppercase" onchange="updatePaymentMethod(${idx}, 'type', this.value); renderPaymentConfig()">
+                                <option value="generic" ${pm.type==='generic'?'selected':''}>Genérico / QR</option>
+                                <option value="bank" ${pm.type==='bank'?'selected':''}>Cuenta Bancaria</option>
+                                <option value="link" ${pm.type==='link'?'selected':''}>Link de Pago</option>
+                            </select>
+                            <input class="cyber-input flex-1 p-2 text-xs font-bold" value="${pm.name}" onchange="updatePaymentMethod(${idx}, 'name', this.value)" placeholder="Nombre Visible al Cliente (Ej: Pago con Tarjeta)">
+                        </div>
+                        
+                        ${extraFields}
+                        
+                        <textarea class="cyber-input w-full p-2 text-xs h-12" onchange="updatePaymentMethod(${idx}, 'info', this.value)" placeholder="Instrucciones Adicionales...">${pm.info || ''}</textarea>
+                    </div>`;
              });
-             document.getElementById('reportTotalSum').innerText = `C$ ${total.toFixed(2)}`;
         }
-
-        window.exportToExcel = () => {
-             if(!window.currentReportData || window.currentReportData.length === 0) return alert("Genera un reporte primero");
-             
-             let csv = "ID ORDEN,FECHA,CLIENTE,TELEFONO,ITEMS,TOTAL,METODO\n";
-             window.currentReportData.forEach(o => {
-                 const itemsStr = o.items.map(i => `${i.qty}x ${i.name}`).join(" | ");
-                 csv += `${o.orderId},${new Date(o.date.seconds*1000).toLocaleDateString()},${o.customer.name},${o.customer.phone},"${itemsStr}",${o.total},${o.paymentMethod}\n`;
-             });
-             
-             const blob = new Blob([csv], { type: 'text/csv' });
-             const url = window.URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url; a.download = `Reporte_Ventas_${new Date().toISOString().slice(0,10)}.csv`;
-             a.click();
-        }
-
-        // --- CONFIGURACIÓN GLOBAL ---
-        function applyConfigToUI() {
-            document.getElementById('confTitle').value = globalConfig.title || "";
-            document.getElementById('confLogo').value = globalConfig.logo || "";
-            document.getElementById('confBanner').value = globalConfig.banner || "";
-            document.getElementById('confWhatsapp').value = globalConfig.whatsapp || "";
-            document.getElementById('confInsta').value = globalConfig.instagram || "";
-            
-            renderCategoriesConfig();
-            renderPaymentConfig();
-        }
+        window.addPaymentMethodInput = () => { globalConfig.paymentMethods.push({type: 'generic', internalName: "Nuevo Método", name: "Método de Pago", info: ""}); renderPaymentConfig(); }
+        window.updatePaymentMethod = (idx, field, val) => { globalConfig.paymentMethods[idx][field] = val; }
+        window.removePaymentMethod = (idx) => { globalConfig.paymentMethods.splice(idx,1); renderPaymentConfig(); }
         
+        // --- CATEGORÍAS ---
         function renderCategoriesConfig() {
-            const c = document.getElementById('categoriesContainer');
-            c.innerHTML = '';
+            const c = document.getElementById('categoriesContainer'); c.innerHTML = '';
             globalConfig.categories.forEach((cat, idx) => {
                 c.innerHTML += `<div class="flex justify-between bg-[#111] p-2 border border-[#333] text-xs"><span class="text-white">${cat}</span><button onclick="removeCategory(${idx})" class="text-red-500">X</button></div>`;
             });
         }
-        
-        window.addCategoryInput = () => {
-            const name = prompt("Nombre de la nueva categoría:");
-            if(name) {
-                globalConfig.categories.push(name.toUpperCase());
-                renderCategoriesConfig();
-            }
-        }
+        window.addCategoryUI = () => { const val = document.getElementById('newCategoryInput').value.trim().toUpperCase(); if(val) { globalConfig.categories.push(val); renderCategoriesConfig(); document.getElementById('newCategoryInput').value = ''; } }
         window.removeCategory = (idx) => { globalConfig.categories.splice(idx,1); renderCategoriesConfig(); }
-        
-        function renderPaymentConfig() {
-             const c = document.getElementById('paymentMethodsContainer');
-             c.innerHTML = '';
-             globalConfig.paymentMethods.forEach((pm, idx) => {
-                 c.innerHTML += `
-                    <div class="bg-[#111] p-4 border border-[#333] relative group">
-                        <button onclick="removePaymentMethod(${idx})" class="absolute top-2 right-2 text-red-500 hover:text-white">X</button>
-                        <input class="cyber-input w-full p-2 mb-2 text-xs font-bold text-[#ccff00]" value="${pm.name}" onchange="updatePaymentMethod(${idx}, 'name', this.value)" placeholder="Nombre Banco/Wallet">
-                        <textarea class="cyber-input w-full p-2 mb-2 text-xs h-16" onchange="updatePaymentMethod(${idx}, 'info', this.value)" placeholder="Instrucciones (Cuenta, Cédula, etc)">${pm.info}</textarea>
-                        <input class="cyber-input w-full p-2 text-xs text-gray-500" value="${pm.qr || ''}" onchange="updatePaymentMethod(${idx}, 'qr', this.value)" placeholder="URL Imagen QR (Opcional)">
-                    </div>`;
-             });
-        }
-        window.addPaymentMethodInput = () => { globalConfig.paymentMethods.push({name: "NUEVO MÉTODO", info: "", qr: ""}); renderPaymentConfig(); }
-        window.updatePaymentMethod = (idx, field, val) => { globalConfig.paymentMethods[idx][field] = val; }
-        window.removePaymentMethod = (idx) => { globalConfig.paymentMethods.splice(idx,1); renderPaymentConfig(); }
 
+        // --- SAVE CONFIGS ---
         window.saveGlobalConfig = async () => {
              const newData = {
                  title: document.getElementById('confTitle').value,
@@ -1050,15 +944,14 @@
              await setDoc(doc(db, "settings", "store_config"), newData, { merge: true });
              alert("Configuración Guardada Correctamente");
         }
-
-        // Helpers UI
-        window.switchTab = (t) => {
-            document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden'));
-            document.getElementById(`view-${t}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById(`tab-${t}`).classList.add('nav-active');
+        // --- PORTADA CONFIG ---
+        function applyConfigToUI() { document.getElementById('confTitle').value = globalConfig.title || ""; document.getElementById('confLogo').value = globalConfig.logo || ""; document.getElementById('confBanner').value = globalConfig.banner || ""; document.getElementById('confWhatsapp').value = globalConfig.whatsapp || ""; document.getElementById('confInsta').value = globalConfig.instagram || ""; renderCategoriesConfig(); renderPaymentConfig(); }
+        function applyLandingToUI() { document.getElementById('landingTitle').value = landingConfig.title || ""; document.getElementById('landingSubtitle').value = landingConfig.subtitle || ""; document.getElementById('landingLogo').value = landingConfig.logo || ""; document.getElementById('landingBgImage').value = landingConfig.bgImage || ""; document.getElementById('landingBtnText').value = landingConfig.btnText || ""; document.getElementById('landingStoreUrl').value = landingConfig.storeUrl || ""; document.getElementById('landingInsta').value = landingConfig.instagram || ""; document.getElementById('landingTiktok').value = landingConfig.tiktok || ""; document.getElementById('landingWhatsapp').value = landingConfig.whatsapp || ""; }
+        window.saveLandingConfig = async () => {
+             const d = { title: document.getElementById('landingTitle').value, subtitle: document.getElementById('landingSubtitle').value, logo: document.getElementById('landingLogo').value, bgImage: document.getElementById('landingBgImage').value, btnText: document.getElementById('landingBtnText').value, storeUrl: document.getElementById('landingStoreUrl').value, instagram: document.getElementById('landingInsta').value, tiktok: document.getElementById('landingTiktok').value, whatsapp: document.getElementById('landingWhatsapp').value };
+             await setDoc(doc(db, "settings", "landing_page_v2"), d, { merge: true }); landingConfig = d; alert("Portada guardada");
         }
-
+        window.switchTab = (t) => { document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden')); document.getElementById(`view-${t}`).classList.remove('hidden'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active')); document.getElementById(`tab-${t}`).classList.add('nav-active'); }
         lucide.createIcons();
     </script>
 </body>

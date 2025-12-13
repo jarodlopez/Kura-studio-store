@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA | ENTERPRISE ADMIN V8.2</title>
+    <title>KURA | ENTERPRISE ADMIN V8.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -41,7 +41,7 @@
     <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black">
         <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(204,255,0,0.1)] relative overflow-hidden flex flex-col items-center">
             <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">KURA<span class="text-[#ff003c]">ADMIN</span></h1>
-            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.2 // STABLE</p>
+            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.3 // PAYMENT FIX</p>
             <form id="loginForm" class="space-y-4 w-full">
                 <input type="email" id="email" class="cyber-input w-full p-4 text-sm" placeholder="ID DE COMANDO" required>
                 <input type="password" id="password" class="cyber-input w-full p-4 text-sm" placeholder="CLAVE DE ACCESO" required>
@@ -58,7 +58,7 @@
         <div class="p-6 border-b border-[#222]">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">KURA<span class="text-[#ccff00]">OS</span></h1>
             <p class="text-[10px] text-neutral-500 font-mono mt-1 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V8.2
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE V8.3
             </p>
         </div>
         <nav class="flex-1 p-4 space-y-2 font-mono text-xs">
@@ -127,7 +127,13 @@
         <div id="view-orders" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="sticky top-0 bg-black py-4 z-10 border-b border-[#222] flex justify-between items-center">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="list-ordered"></i> HISTORIAL DE ÓRDENES</h2>
-                <input type="text" id="orderSearchInput" placeholder="Buscar ID o Cliente..." class="cyber-input px-3 py-2 text-xs w-64" onkeyup="filterOrders()">
+                <div class="flex gap-2">
+                    <!-- BOTÓN DE ACTUALIZACIÓN MANUAL (Como solicitaste) -->
+                    <button onclick="refreshOrdersManual()" class="cyber-btn bg-[#00f3ff] text-black px-4 text-xs font-bold hover:bg-white flex items-center gap-2">
+                        <i data-lucide="refresh-cw"></i> ACTUALIZAR
+                    </button>
+                    <input type="text" id="orderSearchInput" placeholder="Buscar ID o Cliente..." class="cyber-input px-3 py-2 text-xs w-64" onkeyup="filterOrders()">
+                </div>
             </div>
             <div class="overflow-x-auto border border-[#222] bg-[#0a0a0a] rounded-sm">
                 <table class="w-full text-left text-sm">
@@ -562,6 +568,13 @@
              initialLoadTime = new Date();
              unsubscribeNewOrders();
              setupNewOrderListener();
+             // Visual feedback para el botón manual
+             const btn = document.querySelector('button[onclick="refreshOrdersManual()"]');
+             if(btn) {
+                 const originalHTML = btn.innerHTML;
+                 btn.innerHTML = '<i data-lucide="check"></i> LISTO';
+                 setTimeout(() => { btn.innerHTML = originalHTML; lucide.createIcons(); }, 1500);
+             }
         }
 
         // --- GESTIÓN DE PRODUCTOS ---
@@ -880,8 +893,9 @@
             const blob = doc.output('blob'); lastGeneratedPdfBlob = blob; document.getElementById('pdfViewer').src = URL.createObjectURL(blob);
         }
 
-        // --- MÉTODOS DE PAGO (MEJORADO V8) ---
-        function renderPaymentConfig() {
+        // --- MÉTODOS DE PAGO (MEJORADO V8 - CORREGIDO) ---
+        // Se cambió a window.renderPaymentConfig para que sea accesible desde el HTML onchange
+        window.renderPaymentConfig = () => {
              const c = document.getElementById('paymentMethodsContainer'); c.innerHTML = '';
              globalConfig.paymentMethods.forEach((pm, idx) => {
                  let extraFields = '';

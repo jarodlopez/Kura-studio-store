@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KURA | ENTERPRISE ADMIN V8.3</title>
+    <title>KURA | ENTERPRISE ADMIN V8.3 (FIXED)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- LIBRERÍAS PARA PDF Y EXCEL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
@@ -27,8 +26,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--acid-green); }
         .upload-area { border: 2px dashed #333; transition: all 0.3s; cursor: pointer; position: relative; }
         .upload-area:hover { border-color: var(--acid-green); background: rgba(204,255,0,0.05); }
-        
-        /* Animaciones */
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         .nav-active { background: #111; color: var(--acid-green); border-left-color: var(--acid-green) !important; }
@@ -41,7 +38,7 @@
     <div id="login-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black">
         <div class="w-full max-w-md bg-[#0a0a0a] border border-[#333] p-8 shadow-[0_0_50px_rgba(204,255,0,0.1)] relative overflow-hidden flex flex-col items-center">
             <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">KURA<span class="text-[#ff003c]">ADMIN</span></h1>
-            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.3 // PAYMENT FIX</p>
+            <p class="text-[10px] font-mono text-neutral-500 mb-6">SYSTEM V8.3 // RESTORED</p>
             <form id="loginForm" class="space-y-4 w-full">
                 <input type="email" id="email" class="cyber-input w-full p-4 text-sm" placeholder="ID DE COMANDO" required>
                 <input type="password" id="password" class="cyber-input w-full p-4 text-sm" placeholder="CLAVE DE ACCESO" required>
@@ -128,7 +125,6 @@
             <div class="sticky top-0 bg-black py-4 z-10 border-b border-[#222] flex justify-between items-center">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="list-ordered"></i> HISTORIAL DE ÓRDENES</h2>
                 <div class="flex gap-2">
-                    <!-- BOTÓN DE ACTUALIZACIÓN MANUAL (Como solicitaste) -->
                     <button onclick="refreshOrdersManual()" class="cyber-btn bg-[#00f3ff] text-black px-4 text-xs font-bold hover:bg-white flex items-center gap-2">
                         <i data-lucide="refresh-cw"></i> ACTUALIZAR
                     </button>
@@ -146,14 +142,13 @@
             </div>
         </div>
 
-        <!-- VISTA REPORTES MEJORADA -->
+        <!-- VISTA REPORTES -->
         <div id="view-reports" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="sticky top-0 bg-black py-4 z-10 border-b border-[#222]">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="bar-chart-3"></i> REPORTES DE VENTA</h2>
             </div>
             
             <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-6">
-                <!-- Selectores Rápidos -->
                 <div class="flex gap-2 border-b border-[#333] pb-4">
                     <button onclick="setReportDate('today')" class="text-[10px] bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:border-[#ccff00] px-3 py-1 uppercase">Hoy</button>
                     <button onclick="setReportDate('week')" class="text-[10px] bg-[#111] border border-[#333] text-gray-400 hover:text-white hover:border-[#ccff00] px-3 py-1 uppercase">Esta Semana</button>
@@ -161,7 +156,6 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                    <!-- Rango de Fechas Integrado -->
                     <div class="lg:col-span-2">
                          <label class="text-[10px] text-gray-500 uppercase font-bold mb-1 block">RANGO DE FECHAS</label>
                          <div class="flex items-center gap-2 bg-[#111] p-2 border border-[#333] h-[42px]">
@@ -199,18 +193,17 @@
             </div>
         </div>
 
-        <!-- VISTA LANDING (PORTADA & REDES) -->
+        <!-- VISTA LANDING -->
         <div id="view-landing" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur z-10 py-4 border-b border-[#222]">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="layout-template"></i> PORTADA & REDES</h2>
                 <button onclick="saveLandingConfig()" class="cyber-btn bg-[#ff003c] text-white px-6 py-3 flex items-center gap-2"><i data-lucide="save"></i> GUARDAR</button>
             </div>
             <div class="max-w-4xl mx-auto space-y-8">
-                <!-- SECCIÓN APARIENCIA -->
                 <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-6">
                      <h3 class="text-[#ccff00] font-bold border-b border-[#333] pb-2">APARIENCIA WEB</h3>
                      <div class="space-y-2">
-                         <label class="text-[10px] text-gray-500 uppercase font-bold">LOGO DE LA TIENDA (Para Facturas y Web)</label>
+                         <label class="text-[10px] text-gray-500 uppercase font-bold">LOGO DE LA TIENDA</label>
                          <div class="flex gap-2">
                              <input id="landingLogo" class="cyber-input flex-1 p-2 text-[#00f3ff]" placeholder="https://...">
                              <div class="upload-area w-10 flex items-center justify-center bg-[#111]">
@@ -236,32 +229,40 @@
                          <div><label class="text-[10px] text-gray-500">URL TIENDA (Botón)</label><input id="landingStoreUrl" class="cyber-input w-full p-2"></div>
                      </div>
                 </div>
-
-                <!-- SECCIÓN REDES (FOOTER) -->
                 <div class="bg-[#0a0a0a] border border-[#222] p-6 space-y-6">
-                     <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2">REDES SOCIALES (PIE DE PÁGINA)</h3>
+                     <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2">REDES SOCIALES</h3>
                      <div class="grid md:grid-cols-2 gap-4">
-                         <div><label class="text-[10px] text-gray-500">INSTAGRAM (Usuario o URL)</label><input id="landingInsta" class="cyber-input w-full p-2"></div>
-                         <div><label class="text-[10px] text-gray-500">TIKTOK (Usuario o URL)</label><input id="landingTiktok" class="cyber-input w-full p-2"></div>
-                         <div class="col-span-2"><label class="text-[10px] text-gray-500">WHATSAPP (Número con código, ej: 50588888888)</label><input id="landingWhatsapp" class="cyber-input w-full p-2 text-[#ccff00] font-bold"></div>
+                         <div><label class="text-[10px] text-gray-500">INSTAGRAM</label><input id="landingInsta" class="cyber-input w-full p-2"></div>
+                         <div><label class="text-[10px] text-gray-500">TIKTOK</label><input id="landingTiktok" class="cyber-input w-full p-2"></div>
+                         <div class="col-span-2"><label class="text-[10px] text-gray-500">WHATSAPP</label><input id="landingWhatsapp" class="cyber-input w-full p-2 text-[#ccff00] font-bold"></div>
                      </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA CONFIGURACIÓN (CATEGORÍAS Y PAGOS MEJORADOS) -->
+        <!-- VISTA CONFIGURACIÓN -->
         <div id="view-config" class="view-section hidden p-6 md:p-10 space-y-6 pb-24">
             <div class="flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur z-10 py-4 border-b border-[#222]">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="settings"></i> AJUSTES DE TIENDA</h2>
                 <button onclick="saveGlobalConfig()" class="cyber-btn bg-[#ccff00] text-black px-6 py-2 flex items-center gap-2"><i data-lucide="save"></i> GUARDAR CAMBIOS</button>
             </div>
+
+            <!-- RESTAURACIÓN: CONFIGURACIÓN GENERAL (FALTABA EN TU CÓDIGO Y HACÍA CRASH) -->
+            <div class="bg-[#0a0a0a] border border-[#222] p-6 mb-6">
+                <h3 class="text-white font-bold border-b border-[#333] pb-2 mb-4">GENERAL & PDF</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] text-gray-500">TÍTULO TIENDA</label><input id="confTitle" class="cyber-input w-full p-2 text-xs"></div>
+                    <div><label class="text-[10px] text-gray-500">LOGO URL</label><input id="confLogo" class="cyber-input w-full p-2 text-xs"></div>
+                    <!-- Inputs ocultos para compatibilidad con código antiguo -->
+                    <input type="hidden" id="confBanner"><input type="hidden" id="confWhatsapp"><input type="hidden" id="confInsta">
+                </div>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- CATEGORÍAS -->
                 <div class="space-y-6">
                     <div class="bg-[#0a0a0a] border border-[#222] p-6">
-                        <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2 mb-4 flex justify-between items-center">
-                            CATEGORÍAS DE PRODUCTOS
-                        </h3>
+                        <h3 class="text-[#00f3ff] font-bold border-b border-[#333] pb-2 mb-4 flex justify-between items-center">CATEGORÍAS</h3>
                         <div class="flex gap-2 mb-4">
                             <input type="text" id="newCategoryInput" placeholder="NUEVA CATEGORÍA..." class="cyber-input flex-1 p-2 text-xs uppercase">
                             <button onclick="addCategoryUI()" class="bg-[#ccff00] text-black px-4 text-xs font-bold hover:bg-white">AGREGAR</button>
@@ -269,12 +270,11 @@
                         <div id="categoriesContainer" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></div>
                     </div>
                 </div>
-                
-                <!-- MÉTODOS DE PAGO AVANZADOS -->
+                <!-- MÉTODOS DE PAGO -->
                 <div class="space-y-6">
                      <div class="bg-[#0a0a0a] border border-[#222] p-6">
                         <h3 class="text-[#ff003c] font-bold border-b border-[#333] pb-2 mb-4">MÉTODOS DE PAGO</h3>
-                        <p class="text-[10px] text-gray-500 mb-4">Configura Cuentas Bancarias o Links de Pago. Usa el "Nombre Interno" para vincular un Link específico a un producto.</p>
+                        <p class="text-[10px] text-gray-500 mb-4">Configura Cuentas Bancarias o Links de Pago.</p>
                         <div id="paymentMethodsContainer" class="space-y-4"></div>
                         <button onclick="addPaymentMethodInput()" class="w-full py-4 border border-dashed border-[#333] text-gray-500 text-xs hover:border-[#ccff00] hover:text-[#ccff00] mt-4 flex items-center justify-center gap-2 font-bold"><i data-lucide="plus"></i> AGREGAR MÉTODO DE PAGO</button>
                      </div>
@@ -283,186 +283,19 @@
         </div>
     </main>
 
-    <!-- NOTIFICACIÓN FLOTANTE (NUEVAS ÓRDENES) -->
+    <!-- NOTIFICACIÓN FLOTANTE -->
     <button id="newOrdersAlert" onclick="refreshOrdersManual()" class="hidden floating-alert bg-[#ff003c] text-white px-6 py-3 shadow-[0_0_20px_#ff003c] font-bold flex items-center gap-3 rounded-sm hover:scale-105 transition-transform">
         <i data-lucide="bell-ring" class="animate-bounce"></i>
         <span><span id="newOrdersCount">0</span> NUEVAS ÓRDENES</span>
         <span class="bg-white text-black text-[10px] px-1 rounded ml-2">ACTUALIZAR</span>
     </button>
 
-    <!-- MODAL PRODUCTO -->
-    <div id="productModal" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="absolute top-0 right-0 h-full w-full md:w-[500px] bg-[#0f0f0f] border-l border-[#222] shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="modalContent">
-            <div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#111]">
-                <h3 id="modalTitle" class="text-lg font-bold text-white uppercase font-mono">PRODUCTO</h3>
-                <button onclick="closeModal()" class="text-neutral-500 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-            <form id="productForm" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
-                <input type="hidden" id="editId"><input type="hidden" id="currentImageUrl">
-                <div class="flex items-center justify-between bg-[#050505] p-3 border border-[#222]">
-                    <span class="text-xs font-bold uppercase text-white">Visible en Tienda</span>
-                    <input type="checkbox" id="isActive" class="accent-[#ccff00] w-5 h-5">
-                </div>
-                
-                <div><label class="text-xs text-gray-500 font-mono">NOMBRE DEL ITEM</label><input type="text" id="name" required class="cyber-input w-full p-3 text-sm font-bold"></div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-xs text-gray-500 font-mono">PRECIO (C$)</label><input type="number" step="0.01" id="price" required class="cyber-input w-full p-3 text-sm font-bold text-[#ccff00]"></div>
-                    <div><label class="text-xs text-[#ff003c] font-mono">PRECIO OFERTA (Opc)</label><input type="number" step="0.01" id="comparePrice" class="cyber-input w-full p-3 text-sm border-[#ff003c]/30"></div>
-                </div>
+    <!-- MODALES -->
+    <div id="productModal" class="fixed inset-0 z-50 hidden"><div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div><div class="absolute top-0 right-0 h-full w-full md:w-[500px] bg-[#0f0f0f] border-l border-[#222] shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="modalContent"><div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#111]"><h3 id="modalTitle" class="text-lg font-bold text-white uppercase font-mono">PRODUCTO</h3><button onclick="closeModal()" class="text-neutral-500 hover:text-white"><i data-lucide="x"></i></button></div><form id="productForm" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar"><input type="hidden" id="editId"><input type="hidden" id="currentImageUrl"><div class="flex items-center justify-between bg-[#050505] p-3 border border-[#222]"><span class="text-xs font-bold uppercase text-white">Visible en Tienda</span><input type="checkbox" id="isActive" class="accent-[#ccff00] w-5 h-5"></div><div><label class="text-xs text-gray-500 font-mono">NOMBRE DEL ITEM</label><input type="text" id="name" required class="cyber-input w-full p-3 text-sm font-bold"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs text-gray-500 font-mono">PRECIO (C$)</label><input type="number" step="0.01" id="price" required class="cyber-input w-full p-3 text-sm font-bold text-[#ccff00]"></div><div><label class="text-xs text-[#ff003c] font-mono">PRECIO OFERTA (Opc)</label><input type="number" step="0.01" id="comparePrice" class="cyber-input w-full p-3 text-sm border-[#ff003c]/30"></div></div><div><label class="text-xs text-gray-500 font-mono">CATEGORÍA</label><select id="categorySelect" class="cyber-input w-full p-3 text-sm uppercase cursor-pointer"></select></div><div class="bg-[#111] p-3 border border-l-2 border-[#00f3ff]"><label class="text-[10px] text-[#00f3ff] font-bold uppercase flex items-center gap-2"><i data-lucide="link"></i> LINK DE PAGO DIRECTO (OPCIONAL)</label><p class="text-[9px] text-gray-500 mb-2">Si seleccionas uno, el botón de compra llevará directo a este link.</p><select id="linkedPaymentMethod" class="cyber-input w-full p-2 text-xs uppercase cursor-pointer text-[#00f3ff]"><option value="">-- Usar Checkout Normal --</option></select></div><div class="bg-[#0a0a0a] border border-[#333] p-3 rounded-sm"><label class="text-xs font-bold text-[#ccff00] mb-2 block flex justify-between"><span>VARIANTES & STOCK</span><span class="text-[10px] text-gray-500">El stock 0 oculta la talla en web</span></label><div class="flex gap-2 mb-2"><input type="text" id="newVariantSize" placeholder="TALLA (Ej: M)" class="cyber-input w-1/2 p-2 text-xs uppercase font-bold"><input type="number" id="newVariantQty" placeholder="CANTIDAD" class="cyber-input w-1/4 p-2 text-xs font-bold"><button type="button" onclick="addVariant()" class="bg-[#333] text-white px-3 hover:bg-[#ccff00] hover:text-black transition-colors"><i data-lucide="plus" width="14"></i></button></div><div id="variantsList" class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar p-1"></div><input type="hidden" id="variantsData" value="{}"></div><div><label class="text-xs text-gray-500 font-mono">DESCRIPCIÓN</label><textarea id="description" rows="3" class="cyber-input w-full p-3 text-sm"></textarea></div><div class="space-y-2"><label class="text-xs text-gray-500 font-mono">IMAGEN DEL PRODUCTO</label><div class="flex gap-2"><input type="text" id="manualImageUrl" placeholder="Pegar URL existente..." class="cyber-input flex-1 p-2 text-xs text-gray-400" onchange="updatePreviewFromUrl()"></div><div class="border border-dashed border-[#333] p-4 text-center hover:border-[#ccff00] transition-colors relative group cursor-pointer"><input type="file" id="imageFile" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="window.uploadGenericImage(this, 'currentImageUrl', 'imgPreview')"><div class="text-xs text-gray-500 group-hover:text-white pointer-events-none"><i data-lucide="upload-cloud" class="mx-auto mb-2"></i>Clic para subir nueva imagen</div></div><div id="imagePreviewContainer" class="hidden relative mt-2 w-full h-48 bg-[#050505] border border-[#222] flex items-center justify-center"><img id="imgPreview" src="" class="h-full object-contain"><div id="uploadingSpinner" class="absolute inset-0 bg-black/80 flex items-center justify-center text-[#ccff00] hidden font-mono text-xs">SUBIENDO...</div></div></div></form><div class="p-6 border-t border-[#222] bg-[#0a0a0a] flex gap-4"><button onclick="deleteProduct()" id="btnDeleteProd" class="hidden cyber-btn bg-black border border-red-900 text-red-500 py-4 px-4 hover:bg-red-900 hover:text-white"><i data-lucide="trash"></i></button><button onclick="saveProductForm()" id="saveBtn" class="cyber-btn flex-1 bg-[#ff003c] text-white py-4 flex items-center justify-center gap-2 hover:bg-white hover:text-black">GUARDAR DATOS</button></div></div></div>
+    <div id="posVariantModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closePosVariantModal()"></div><div class="bg-[#111] border border-[#333] w-full max-w-sm relative z-10 p-6 shadow-2xl flex flex-col"><h3 class="text-[#ccff00] font-mono text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="layers"></i> SELECCIONAR TALLA</h3><p id="posVariantProductName" class="text-white mb-4 text-sm border-b border-[#333] pb-2"></p><div id="posVariantOptions" class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar"></div><button onclick="closePosVariantModal()" class="mt-6 w-full text-center text-gray-500 hover:text-white text-xs font-mono py-2">CANCELAR</button></div></div>
+    <div id="posPaymentModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closePaymentModal()"></div><div class="bg-[#111] border border-[#333] w-full max-w-md relative z-10 p-8 shadow-[0_0_50px_rgba(204,255,0,0.2)] flex flex-col animate-slide-up"><h3 class="text-2xl font-black text-white text-center mb-6 font-mono">CONFIRMAR VENTA</h3><div class="space-y-4 mb-6"><div class="flex justify-between text-neutral-400 text-sm"><span>Cliente:</span><span id="confClient" class="text-white font-bold"></span></div><div class="flex justify-between text-neutral-400 text-sm"><span>Items:</span><span id="confItems" class="text-white font-bold"></span></div><div class="flex justify-between text-3xl font-black text-[#ccff00] border-t border-b border-[#333] py-4 font-mono"><span>TOTAL:</span><span id="confTotal"></span></div></div><label class="text-[10px] text-gray-500 uppercase font-bold mb-2">MÉTODO DE PAGO</label><div class="grid grid-cols-2 gap-2 mb-6"><button onclick="selectPayment('Efectivo')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">💵 EFECTIVO</button><button onclick="selectPayment('Tarjeta')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">💳 TARJETA</button><button onclick="selectPayment('Transferencia')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">🏦 TRANSF</button><button onclick="selectPayment('Link')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">🔗 LINK</button></div><input type="hidden" id="selectedPaymentMethod" value="Efectivo"><button onclick="confirmPosSale()" id="btnProcessPayment" class="cyber-btn w-full bg-[#ccff00] text-black py-4 font-bold text-xl hover:bg-white transition-colors uppercase">Facturar</button><button onclick="closePaymentModal()" class="mt-4 text-xs text-neutral-500 hover:text-white text-center">CANCELAR</button></div></div>
+    <div id="invoiceViewerModal" class="fixed inset-0 z-[101] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closeInvoiceViewerModal()"></div><div class="bg-[#111] border border-[#333] w-full max-w-5xl h-[90vh] relative z-10 p-0 shadow-2xl flex flex-col animate-slide-up"><div class="p-4 border-b border-[#333] flex justify-between items-center bg-[#0a0a0a]"><h3 class="text-[#ccff00] font-mono text-lg font-bold">DETALLE DE ORDEN <span id="viewerOrderId"></span></h3><button onclick="closeInvoiceViewerModal()" class="text-white hover:text-red-500"><i data-lucide="x"></i></button></div><div class="flex flex-col md:flex-row flex-1 overflow-hidden"><div class="w-full md:w-1/3 border-r border-[#222] p-6 overflow-y-auto custom-scrollbar bg-[#050505] flex flex-col"><h4 class="text-white font-bold mb-4 uppercase text-xs border-b border-[#333] pb-2">Información del Cliente</h4><div id="orderDetailPanel" class="space-y-4 text-sm text-gray-300"></div><div class="mt-8 pt-4 border-t border-[#333]"><h4 class="text-white font-bold mb-2 uppercase text-xs">Actualizar Estado</h4><select id="orderStatusUpdate" class="cyber-input w-full p-2 mb-2 text-xs uppercase"><option value="pending">🟡 Pendiente</option><option value="completed">🟢 Completado</option><option value="cancelled">🔴 Cancelado</option></select><button id="btnUpdateStatus" class="w-full bg-[#222] hover:bg-white hover:text-black text-white py-2 text-xs font-bold border border-[#333]">GUARDAR ESTADO</button></div><div id="paymentProofContainer" class="mt-8 hidden"><h4 class="text-[#00f3ff] font-bold mb-2 uppercase text-xs">Comprobante de Pago</h4><a id="proofLink" href="#" target="_blank" class="block w-full h-48 border border-dashed border-[#333] hover:border-[#00f3ff] flex items-center justify-center bg-[#111] relative group"><img id="proofImg" src="" class="h-full w-full object-contain hidden"><div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white text-xs font-bold">CLIC PARA AMPLIAR</span></div><span id="proofText" class="text-xs text-gray-500">Ver Comprobante</span></a></div><div id="btnFinishPos" class="mt-auto pt-4 hidden"><button onclick="closeInvoiceViewerModal()" class="w-full bg-[#107c41] text-white py-3 font-bold uppercase hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2"><i data-lucide="check-circle"></i> FINALIZAR Y VOLVER A CAJA</button></div></div><div class="flex-1 bg-neutral-900 relative flex flex-col"><iframe id="pdfViewer" class="flex-1 w-full h-full border-0"></iframe></div></div><div class="p-4 border-t border-[#333] bg-[#0a0a0a] flex justify-end gap-3"><button id="btnWhatsapp" class="cyber-btn bg-[#25D366] text-black px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-[#128C7E]"><i data-lucide="message-circle"></i> ENVIAR AL CLIENTE</button><button id="btnPrint" class="cyber-btn bg-white text-black px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-gray-200"><i data-lucide="printer"></i> IMPRIMIR FACTURA</button></div></div></div>
 
-                <div>
-                    <label class="text-xs text-gray-500 font-mono">CATEGORÍA</label>
-                    <select id="categorySelect" class="cyber-input w-full p-3 text-sm uppercase cursor-pointer"></select>
-                </div>
-                
-                <!-- VINCULACIÓN DE LINK DE PAGO -->
-                <div class="bg-[#111] p-3 border border-l-2 border-[#00f3ff]">
-                    <label class="text-[10px] text-[#00f3ff] font-bold uppercase flex items-center gap-2">
-                        <i data-lucide="link"></i> LINK DE PAGO DIRECTO (OPCIONAL)
-                    </label>
-                    <p class="text-[9px] text-gray-500 mb-2">Si seleccionas uno, el botón de compra llevará directo a este link.</p>
-                    <select id="linkedPaymentMethod" class="cyber-input w-full p-2 text-xs uppercase cursor-pointer text-[#00f3ff]">
-                        <option value="">-- Usar Checkout Normal --</option>
-                    </select>
-                </div>
-                
-                <!-- CONTROL DE STOCK -->
-                <div class="bg-[#0a0a0a] border border-[#333] p-3 rounded-sm">
-                    <label class="text-xs font-bold text-[#ccff00] mb-2 block flex justify-between">
-                        <span>VARIANTES & STOCK</span>
-                        <span class="text-[10px] text-gray-500">El stock 0 oculta la talla en web</span>
-                    </label>
-                    <div class="flex gap-2 mb-2">
-                        <input type="text" id="newVariantSize" placeholder="TALLA (Ej: M)" class="cyber-input w-1/2 p-2 text-xs uppercase font-bold">
-                        <input type="number" id="newVariantQty" placeholder="CANTIDAD" class="cyber-input w-1/4 p-2 text-xs font-bold">
-                        <button type="button" onclick="addVariant()" class="bg-[#333] text-white px-3 hover:bg-[#ccff00] hover:text-black transition-colors"><i data-lucide="plus" width="14"></i></button>
-                    </div>
-                    <div id="variantsList" class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar p-1"></div>
-                    <input type="hidden" id="variantsData" value="{}">
-                </div>
-
-                <div><label class="text-xs text-gray-500 font-mono">DESCRIPCIÓN</label><textarea id="description" rows="3" class="cyber-input w-full p-3 text-sm"></textarea></div>
-                
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-500 font-mono">IMAGEN DEL PRODUCTO</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="manualImageUrl" placeholder="Pegar URL existente..." class="cyber-input flex-1 p-2 text-xs text-gray-400" onchange="updatePreviewFromUrl()">
-                    </div>
-                    <div class="border border-dashed border-[#333] p-4 text-center hover:border-[#ccff00] transition-colors relative group cursor-pointer">
-                        <input type="file" id="imageFile" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="window.uploadGenericImage(this, 'currentImageUrl', 'imgPreview')">
-                        <div class="text-xs text-gray-500 group-hover:text-white pointer-events-none">
-                            <i data-lucide="upload-cloud" class="mx-auto mb-2"></i>
-                            Clic para subir nueva imagen
-                        </div>
-                    </div>
-                    <div id="imagePreviewContainer" class="hidden relative mt-2 w-full h-48 bg-[#050505] border border-[#222] flex items-center justify-center">
-                        <img id="imgPreview" src="" class="h-full object-contain">
-                        <div id="uploadingSpinner" class="absolute inset-0 bg-black/80 flex items-center justify-center text-[#ccff00] hidden font-mono text-xs">SUBIENDO...</div>
-                    </div>
-                </div>
-
-            </form>
-            <div class="p-6 border-t border-[#222] bg-[#0a0a0a] flex gap-4">
-                <button onclick="deleteProduct()" id="btnDeleteProd" class="hidden cyber-btn bg-black border border-red-900 text-red-500 py-4 px-4 hover:bg-red-900 hover:text-white"><i data-lucide="trash"></i></button>
-                <button onclick="saveProductForm()" id="saveBtn" class="cyber-btn flex-1 bg-[#ff003c] text-white py-4 flex items-center justify-center gap-2 hover:bg-white hover:text-black">GUARDAR DATOS</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SELECCIÓN VARIANTE POS -->
-    <div id="posVariantModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closePosVariantModal()"></div>
-        <div class="bg-[#111] border border-[#333] w-full max-w-sm relative z-10 p-6 shadow-2xl flex flex-col">
-            <h3 class="text-[#ccff00] font-mono text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="layers"></i> SELECCIONAR TALLA</h3>
-            <p id="posVariantProductName" class="text-white mb-4 text-sm border-b border-[#333] pb-2"></p>
-            <div id="posVariantOptions" class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar"></div>
-            <button onclick="closePosVariantModal()" class="mt-6 w-full text-center text-gray-500 hover:text-white text-xs font-mono py-2">CANCELAR</button>
-        </div>
-    </div>
-
-    <!-- MODAL COBRO (CHECKOUT POS) -->
-    <div id="posPaymentModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closePaymentModal()"></div>
-        <div class="bg-[#111] border border-[#333] w-full max-w-md relative z-10 p-8 shadow-[0_0_50px_rgba(204,255,0,0.2)] flex flex-col animate-slide-up">
-            <h3 class="text-2xl font-black text-white text-center mb-6 font-mono">CONFIRMAR VENTA</h3>
-            <div class="space-y-4 mb-6">
-                <div class="flex justify-between text-neutral-400 text-sm"><span>Cliente:</span><span id="confClient" class="text-white font-bold"></span></div>
-                <div class="flex justify-between text-neutral-400 text-sm"><span>Items:</span><span id="confItems" class="text-white font-bold"></span></div>
-                <div class="flex justify-between text-3xl font-black text-[#ccff00] border-t border-b border-[#333] py-4 font-mono"><span>TOTAL:</span><span id="confTotal"></span></div>
-            </div>
-            <label class="text-[10px] text-gray-500 uppercase font-bold mb-2">MÉTODO DE PAGO</label>
-            <div class="grid grid-cols-2 gap-2 mb-6">
-                <button onclick="selectPayment('Efectivo')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">💵 EFECTIVO</button>
-                <button onclick="selectPayment('Tarjeta')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">💳 TARJETA</button>
-                <button onclick="selectPayment('Transferencia')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">🏦 TRANSF</button>
-                <button onclick="selectPayment('Link')" class="pay-opt p-3 border border-[#333] text-sm hover:border-[#ccff00] hover:bg-[#222] text-white focus:bg-[#ccff00] focus:text-black font-bold transition-all">🔗 LINK</button>
-            </div>
-            <input type="hidden" id="selectedPaymentMethod" value="Efectivo">
-            <button onclick="confirmPosSale()" id="btnProcessPayment" class="cyber-btn w-full bg-[#ccff00] text-black py-4 font-bold text-xl hover:bg-white transition-colors uppercase">Facturar</button>
-            <button onclick="closePaymentModal()" class="mt-4 text-xs text-neutral-500 hover:text-white text-center">CANCELAR</button>
-        </div>
-    </div>
-
-    <!-- MODAL DETALLE ORDEN & FACTURA -->
-    <div id="invoiceViewerModal" class="fixed inset-0 z-[101] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closeInvoiceViewerModal()"></div>
-        <div class="bg-[#111] border border-[#333] w-full max-w-5xl h-[90vh] relative z-10 p-0 shadow-2xl flex flex-col animate-slide-up">
-            <div class="p-4 border-b border-[#333] flex justify-between items-center bg-[#0a0a0a]">
-                <h3 class="text-[#ccff00] font-mono text-lg font-bold">DETALLE DE ORDEN <span id="viewerOrderId"></span></h3>
-                <button onclick="closeInvoiceViewerModal()" class="text-white hover:text-red-500"><i data-lucide="x"></i></button>
-            </div>
-            
-            <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
-                <!-- COLUMNA IZQUIERDA: DETALLES Y ESTADO -->
-                <div class="w-full md:w-1/3 border-r border-[#222] p-6 overflow-y-auto custom-scrollbar bg-[#050505] flex flex-col">
-                    <h4 class="text-white font-bold mb-4 uppercase text-xs border-b border-[#333] pb-2">Información del Cliente</h4>
-                    <div id="orderDetailPanel" class="space-y-4 text-sm text-gray-300"></div>
-                    
-                    <div class="mt-8 pt-4 border-t border-[#333]">
-                         <h4 class="text-white font-bold mb-2 uppercase text-xs">Actualizar Estado</h4>
-                         <select id="orderStatusUpdate" class="cyber-input w-full p-2 mb-2 text-xs uppercase">
-                            <option value="pending">🟡 Pendiente</option>
-                            <option value="completed">🟢 Completado</option>
-                            <option value="cancelled">🔴 Cancelado</option>
-                         </select>
-                         <button id="btnUpdateStatus" class="w-full bg-[#222] hover:bg-white hover:text-black text-white py-2 text-xs font-bold border border-[#333]">GUARDAR ESTADO</button>
-                    </div>
-
-                    <div id="paymentProofContainer" class="mt-8 hidden">
-                        <h4 class="text-[#00f3ff] font-bold mb-2 uppercase text-xs">Comprobante de Pago</h4>
-                        <a id="proofLink" href="#" target="_blank" class="block w-full h-48 border border-dashed border-[#333] hover:border-[#00f3ff] flex items-center justify-center bg-[#111] relative group">
-                            <img id="proofImg" src="" class="h-full w-full object-contain hidden">
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="text-white text-xs font-bold">CLIC PARA AMPLIAR</span>
-                            </div>
-                            <span id="proofText" class="text-xs text-gray-500">Ver Comprobante</span>
-                        </a>
-                    </div>
-                    
-                    <!-- Botón Extra para POS: Finalizar -->
-                    <div id="btnFinishPos" class="mt-auto pt-4 hidden">
-                         <button onclick="closeInvoiceViewerModal()" class="w-full bg-[#107c41] text-white py-3 font-bold uppercase hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2">
-                             <i data-lucide="check-circle"></i> FINALIZAR Y VOLVER A CAJA
-                         </button>
-                    </div>
-                </div>
-
-                <!-- COLUMNA DERECHA: PREVISUALIZACIÓN PDF -->
-                <div class="flex-1 bg-neutral-900 relative flex flex-col">
-                    <iframe id="pdfViewer" class="flex-1 w-full h-full border-0"></iframe>
-                </div>
-            </div>
-
-            <div class="p-4 border-t border-[#333] bg-[#0a0a0a] flex justify-end gap-3">
-                 <button id="btnWhatsapp" class="cyber-btn bg-[#25D366] text-black px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-[#128C7E]"><i data-lucide="message-circle"></i> ENVIAR AL CLIENTE</button>
-                 <button id="btnPrint" class="cyber-btn bg-white text-black px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-gray-200"><i data-lucide="printer"></i> IMPRIMIR FACTURA</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOGICA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, serverTimestamp, query, orderBy, onSnapshot, writeBatch, increment, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -472,7 +305,6 @@
         const firebaseConfig = { apiKey: "AIzaSyAztg4F0twRi2NOP8MayAOUYB0ZtHgkss0", authDomain: "kodialabsnic.firebaseapp.com", projectId: "kodialabsnic", storageBucket: "kodialabsnic.firebasestorage.app", messagingSenderId: "740746852984", appId: "1:740746852984:web:972aa34592aef881630b8d" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
 
-        // ESTADO GLOBAL
         let products = [];
         let allOrders = [];
         let posCart = [];
@@ -484,7 +316,6 @@
         let lastGeneratedPdfBlob = null;
         let initialLoadTime = null;
 
-        // --- AUTH ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-overlay').classList.add('hidden');
@@ -510,7 +341,6 @@
         });
         window.logout = () => signOut(auth);
 
-        // --- INICIALIZACIÓN DE DATOS ---
         async function initData() {
             try {
                 const s = await getDoc(doc(db, "settings", "store_config"));
@@ -568,7 +398,6 @@
              initialLoadTime = new Date();
              unsubscribeNewOrders();
              setupNewOrderListener();
-             // Visual feedback para el botón manual
              const btn = document.querySelector('button[onclick="refreshOrdersManual()"]');
              if(btn) {
                  const originalHTML = btn.innerHTML;
@@ -577,20 +406,15 @@
              }
         }
 
-        // --- GESTIÓN DE PRODUCTOS ---
         window.tempVariants = {};
         window.openModal = (id) => {
             document.getElementById('productModal').classList.remove('hidden');
             setTimeout(()=>document.getElementById('modalContent').classList.remove('translate-x-full'), 10);
-            
-            // Llenar categorías
             const catSelect = document.getElementById('categorySelect');
             catSelect.innerHTML = '<option value="">SIN CATEGORÍA</option>';
             globalConfig.categories.forEach(c => {
                 catSelect.innerHTML += `<option value="${c}">${c}</option>`;
             });
-
-            // Llenar Links de Pago
             const linkSelect = document.getElementById('linkedPaymentMethod');
             linkSelect.innerHTML = '<option value="">-- Usar Checkout Normal --</option>';
             globalConfig.paymentMethods.forEach(pm => {
@@ -598,7 +422,6 @@
                     linkSelect.innerHTML += `<option value="${pm.internalName}">${pm.internalName || 'Link Sin Nombre'}</option>`;
                 }
             });
-
             if(id) {
                 const p = products.find(x => x.id === id);
                 document.getElementById('modalTitle').innerText = "EDITAR ITEM";
@@ -610,7 +433,7 @@
                 document.getElementById('manualImageUrl').value = p.image || '';
                 document.getElementById('description').value = p.description || '';
                 document.getElementById('categorySelect').value = p.category || '';
-                document.getElementById('linkedPaymentMethod').value = p.linkedPaymentMethod || ''; // Cargar el link vinculado
+                document.getElementById('linkedPaymentMethod').value = p.linkedPaymentMethod || '';
                 document.getElementById('isActive').checked = p.isActive !== false;
                 document.getElementById('btnDeleteProd').classList.remove('hidden');
                 if(p.image) {
@@ -632,36 +455,24 @@
             }
             renderVariantsList();
         }
-        // ... (Funciones de variantes y subida de imágenes permanecen, pero actualizamos uploadGenericImage)
 
-        // FUNCIÓN GENÉRICA PARA SUBIR IMÁGENES (Productos, Portada, QR Pagos)
         window.uploadGenericImage = async (input, targetInputId, previewId = null) => {
             const file = input.files[0];
             if(!file) return;
             const fd = new FormData();
             fd.append("image", file);
-            
-            // Visual feedback
             const parent = input.parentElement;
             const originalBorder = parent.style.borderColor;
             parent.style.borderColor = "#ccff00";
-            
             try {
-                if(previewId) document.getElementById('uploadingSpinner').classList.remove('hidden'); // Solo si es producto
-                
+                if(previewId) document.getElementById('uploadingSpinner').classList.remove('hidden'); 
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: fd });
                 const data = await res.json();
-                
                 if(data.success) {
                     document.getElementById(targetInputId).value = data.data.url;
-                    // Si hay preview (producto)
                     if(previewId) {
                          const img = document.getElementById(previewId);
-                         if(img) {
-                             img.src = data.data.url;
-                             img.parentElement.classList.remove('hidden');
-                         }
-                         // Sync manual input if exists
+                         if(img) { img.src = data.data.url; img.parentElement.classList.remove('hidden'); }
                          const manual = document.getElementById('manualImageUrl');
                          if(manual) manual.value = data.data.url;
                     }
@@ -676,10 +487,7 @@
         window.updatePreviewFromUrl = () => {
             const url = document.getElementById('manualImageUrl').value;
             document.getElementById('currentImageUrl').value = url;
-            if(url) {
-                document.getElementById('imgPreview').src = url;
-                document.getElementById('imagePreviewContainer').classList.remove('hidden');
-            }
+            if(url) { document.getElementById('imgPreview').src = url; document.getElementById('imagePreviewContainer').classList.remove('hidden'); }
         }
         window.saveProductForm = async () => {
             const btn = document.getElementById('saveBtn');
@@ -693,23 +501,18 @@
                 variants: window.tempVariants, 
                 isActive: document.getElementById('isActive').checked,
                 category: document.getElementById('categorySelect').value,
-                linkedPaymentMethod: document.getElementById('linkedPaymentMethod').value, // GUARDAR EL LINK
+                linkedPaymentMethod: document.getElementById('linkedPaymentMethod').value,
                 description: document.getElementById('description').value,
                 updatedAt: serverTimestamp()
             };
             try {
                 if(id) { await updateDoc(doc(db, "products", id), productData); }
-                else { 
-                    productData.createdAt = serverTimestamp();
-                    await addDoc(collection(db, "products"), productData); 
-                }
+                else { productData.createdAt = serverTimestamp(); await addDoc(collection(db, "products"), productData); }
                 closeModal();
             } catch(e) { alert("Error guardando: " + e.message); }
             btn.innerText = "GUARDAR DATOS"; btn.disabled = false;
         }
-        // ... (Delete product, close modal, render products, pos logic etc - Unchanged)
-        
-        // --- RENDERIZADO PRODUCTOS Y POS (Reutilizando funciones previas) ---
+
         function renderProductsGrid() {
             const grid = document.getElementById('productsGrid');
             const search = document.getElementById('productSearch').value.toLowerCase();
@@ -726,19 +529,7 @@
                 } else { totalStock = '∞'; }
                 const card = document.createElement('div');
                 card.className = `cyber-card p-3 flex flex-col gap-2 ${!p.isActive ? 'opacity-50 border-red-900' : ''}`;
-                card.innerHTML = `
-                    <div class="aspect-square bg-[#111] relative overflow-hidden group">
-                        <img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
-                        ${!p.isActive ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-red-500 font-bold border border-red-500 m-4 text-xs">OCULTO WEB</div>' : ''}
-                        <div class="absolute bottom-0 left-0 bg-black/80 text-white text-[10px] px-2 py-1 w-full flex flex-wrap gap-1">${stockBadges}</div>
-                    </div>
-                    <div>
-                        <div class="font-bold text-white truncate text-sm">${p.name}</div>
-                        <div class="flex justify-between items-center mt-1">
-                            <div class="text-[#ccff00] font-mono font-bold">C$ ${p.price}</div>
-                            <button onclick="openModal('${p.id}')" class="text-[10px] bg-[#222] text-white px-2 py-1 hover:bg-white hover:text-black border border-[#333]">EDITAR</button>
-                        </div>
-                    </div>`;
+                card.innerHTML = `<div class="aspect-square bg-[#111] relative overflow-hidden group"><img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover transition-transform group-hover:scale-110">${!p.isActive ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-red-500 font-bold border border-red-500 m-4 text-xs">OCULTO WEB</div>' : ''}<div class="absolute bottom-0 left-0 bg-black/80 text-white text-[10px] px-2 py-1 w-full flex flex-wrap gap-1">${stockBadges}</div></div><div><div class="font-bold text-white truncate text-sm">${p.name}</div><div class="flex justify-between items-center mt-1"><div class="text-[#ccff00] font-mono font-bold">C$ ${p.price}</div><button onclick="openModal('${p.id}')" class="text-[10px] bg-[#222] text-white px-2 py-1 hover:bg-white hover:text-black border border-[#333]">EDITAR</button></div></div>`;
                 grid.appendChild(card);
             });
             if(filtered.length === 0) grid.innerHTML = '<div class="text-gray-500 text-xs col-span-4 text-center py-10">No se encontraron productos.</div>';
@@ -748,12 +539,7 @@
         window.renderVariantsList = () => {
             const el = document.getElementById('variantsList'); el.innerHTML = '';
             Object.entries(window.tempVariants).forEach(([size, qty]) => {
-                el.innerHTML += `
-                    <div class="flex justify-between items-center bg-[#111] p-2 border border-[#333] text-xs text-white group hover:border-[#ccff00]">
-                        <span class="font-bold w-10">${size}</span>
-                        <span class="font-mono text-[#ccff00] flex-1 text-center">${qty} Unid.</span>
-                        <button onclick="deleteVariant('${size}')" class="text-neutral-500 hover:text-red-500"><i data-lucide="trash-2" width="14"></i></button>
-                    </div>`;
+                el.innerHTML += `<div class="flex justify-between items-center bg-[#111] p-2 border border-[#333] text-xs text-white group hover:border-[#ccff00]"><span class="font-bold w-10">${size}</span><span class="font-mono text-[#ccff00] flex-1 text-center">${qty} Unid.</span><button onclick="deleteVariant('${size}')" class="text-neutral-500 hover:text-red-500"><i data-lucide="trash-2" width="14"></i></button></div>`;
             });
             document.getElementById('variantsData').value = JSON.stringify(window.tempVariants);
             lucide.createIcons();
@@ -767,20 +553,12 @@
         window.deleteProduct = async () => { if(confirm("¿Seguro?")) { const id = document.getElementById('editId').value; await deleteDoc(doc(db, "products", id)); closeModal(); } }
         window.closeModal = () => { document.getElementById('modalContent').classList.add('translate-x-full'); setTimeout(()=>document.getElementById('productModal').classList.add('hidden'), 300); }
 
-        // --- POS (REUTILIZADO) ---
         window.renderPosGrid = () => {
              const container = document.getElementById('posGrid');
              const term = document.getElementById('posSearch') ? document.getElementById('posSearch').value.toLowerCase() : "";
              container.innerHTML = '';
              products.filter(p => p.isActive !== false && p.name.toLowerCase().includes(term)).forEach(p => {
-                 container.innerHTML += `
-                    <div onclick="addToPos('${p.id}')" class="bg-[#111] border border-[#333] p-2 cursor-pointer hover:border-[#ccff00] group transition-all">
-                        <div class="h-24 w-full bg-black mb-2 overflow-hidden">
-                            <img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
-                        </div>
-                        <div class="text-xs font-bold text-white truncate">${p.name}</div>
-                        <div class="text-[#ccff00] text-xs font-mono">C$ ${p.price}</div>
-                    </div>`;
+                 container.innerHTML += `<div onclick="addToPos('${p.id}')" class="bg-[#111] border border-[#333] p-2 cursor-pointer hover:border-[#ccff00] group transition-all"><div class="h-24 w-full bg-black mb-2 overflow-hidden"><img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform"></div><div class="text-xs font-bold text-white truncate">${p.name}</div><div class="text-[#ccff00] text-xs font-mono">C$ ${p.price}</div></div>`;
              });
         }
         window.filterPos = window.renderPosGrid;
@@ -833,7 +611,6 @@
             await batch.commit(); closePaymentModal(); clearPosCart(); btn.innerText = "FACTURAR"; btn.disabled = false; refreshOrdersManual(); openInvoiceViewer({ id: orderRef.id, ...orderData, date: { seconds: Date.now()/1000 } }); 
         }
 
-        // --- ÓRDENES Y REPORTES (Reutilizados de V7.3) ---
         window.filterOrders = () => {
              const term = document.getElementById('orderSearchInput').value.toLowerCase();
              const tbody = document.getElementById('ordersTableBody'); tbody.innerHTML = '';
@@ -866,7 +643,6 @@
             document.getElementById('btnWhatsapp').onclick = () => { const text = `Hola ${cust.name}, te enviamos tu factura de la orden ${order.orderId}.`; window.open(`https://wa.me/505${cust.phone}?text=${encodeURIComponent(text)}`, '_blank'); };
             document.getElementById('btnPrint').onclick = () => { if(lastGeneratedPdfBlob) { const url = URL.createObjectURL(lastGeneratedPdfBlob); const w = window.open(url); w.onload = () => w.print(); } };
             
-            // --- MOSTRAR BOTÓN DE FINALIZAR SI ES POS ---
             if(order.source === 'POS') { document.getElementById('btnFinishPos').classList.remove('hidden'); } else { document.getElementById('btnFinishPos').classList.add('hidden'); }
             
             document.getElementById('invoiceViewerModal').classList.remove('hidden');
@@ -893,66 +669,22 @@
             const blob = doc.output('blob'); lastGeneratedPdfBlob = blob; document.getElementById('pdfViewer').src = URL.createObjectURL(blob);
         }
 
-        // --- MÉTODOS DE PAGO (MEJORADO V8 - CORREGIDO) ---
-        // Se cambió a window.renderPaymentConfig para que sea accesible desde el HTML onchange
         window.renderPaymentConfig = () => {
              const c = document.getElementById('paymentMethodsContainer'); c.innerHTML = '';
              globalConfig.paymentMethods.forEach((pm, idx) => {
                  let extraFields = '';
-                 // TIPO BANCO
                  if(pm.type === 'bank') {
-                     extraFields = `
-                         <div class="grid grid-cols-3 gap-2">
-                             <input class="cyber-input p-2 text-xs" value="${pm.bankName || ''}" onchange="updatePaymentMethod(${idx}, 'bankName', this.value)" placeholder="Nombre Banco">
-                             <input class="cyber-input p-2 text-xs font-mono" value="${pm.accountNumber || ''}" onchange="updatePaymentMethod(${idx}, 'accountNumber', this.value)" placeholder="No. Cuenta">
-                             <input class="cyber-input p-2 text-xs" value="${pm.holderName || ''}" onchange="updatePaymentMethod(${idx}, 'holderName', this.value)" placeholder="Titular">
-                         </div>`;
-                 } 
-                 // TIPO LINK DE PAGO
-                 else if (pm.type === 'link') {
-                     extraFields = `
-                        <div class="space-y-2 bg-[#050505] p-2 border border-[#333]">
-                             <input class="cyber-input w-full p-2 text-xs text-[#00f3ff]" value="${pm.linkUrl || ''}" onchange="updatePaymentMethod(${idx}, 'linkUrl', this.value)" placeholder="URL del Link de Pago">
-                             
-                             <div class="flex gap-2 items-center">
-                                 <input id="pm_qr_${idx}" class="cyber-input flex-1 p-2 text-xs text-gray-500" value="${pm.qrUrl || ''}" onchange="updatePaymentMethod(${idx}, 'qrUrl', this.value)" placeholder="URL Imagen QR">
-                                 <div class="upload-area w-10 h-10 flex items-center justify-center bg-[#111]">
-                                     <input type="file" accept="image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" onchange="uploadGenericImage(this, 'pm_qr_${idx}')">
-                                     <i data-lucide="upload" width="16" class="text-gray-500"></i>
-                                 </div>
-                             </div>
-                        </div>`;
+                     extraFields = `<div class="grid grid-cols-3 gap-2"><input class="cyber-input p-2 text-xs" value="${pm.bankName || ''}" onchange="updatePaymentMethod(${idx}, 'bankName', this.value)" placeholder="Nombre Banco"><input class="cyber-input p-2 text-xs font-mono" value="${pm.accountNumber || ''}" onchange="updatePaymentMethod(${idx}, 'accountNumber', this.value)" placeholder="No. Cuenta"><input class="cyber-input p-2 text-xs" value="${pm.holderName || ''}" onchange="updatePaymentMethod(${idx}, 'holderName', this.value)" placeholder="Titular"></div>`;
+                 } else if (pm.type === 'link') {
+                     extraFields = `<div class="space-y-2 bg-[#050505] p-2 border border-[#333]"><input class="cyber-input w-full p-2 text-xs text-[#00f3ff]" value="${pm.linkUrl || ''}" onchange="updatePaymentMethod(${idx}, 'linkUrl', this.value)" placeholder="URL del Link de Pago"><div class="flex gap-2 items-center"><input id="pm_qr_${idx}" class="cyber-input flex-1 p-2 text-xs text-gray-500" value="${pm.qrUrl || ''}" onchange="updatePaymentMethod(${idx}, 'qrUrl', this.value)" placeholder="URL Imagen QR"><div class="upload-area w-10 h-10 flex items-center justify-center bg-[#111]"><input type="file" accept="image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" onchange="uploadGenericImage(this, 'pm_qr_${idx}')"><i data-lucide="upload" width="16" class="text-gray-500"></i></div></div></div>`;
                  }
-                 
-                 c.innerHTML += `
-                    <div class="bg-[#111] p-4 border border-[#333] relative group space-y-3">
-                        <button onclick="removePaymentMethod(${idx})" class="absolute top-2 right-2 text-red-500 hover:text-white">X</button>
-                        
-                        <div class="flex gap-2 items-center">
-                            <span class="text-[10px] text-gray-500 font-bold uppercase w-24">IDENTIFICADOR INTERNO:</span>
-                            <input class="cyber-input flex-1 p-2 text-xs font-mono text-[#ccff00] border-[#ccff00]/50" value="${pm.internalName || ''}" onchange="updatePaymentMethod(${idx}, 'internalName', this.value)" placeholder="Ej: Link Camisa Yugi - Managua">
-                        </div>
-
-                        <div class="flex gap-2">
-                            <select class="cyber-input w-1/3 p-2 text-xs uppercase" onchange="updatePaymentMethod(${idx}, 'type', this.value); renderPaymentConfig()">
-                                <option value="generic" ${pm.type==='generic'?'selected':''}>Genérico / QR</option>
-                                <option value="bank" ${pm.type==='bank'?'selected':''}>Cuenta Bancaria</option>
-                                <option value="link" ${pm.type==='link'?'selected':''}>Link de Pago</option>
-                            </select>
-                            <input class="cyber-input flex-1 p-2 text-xs font-bold" value="${pm.name}" onchange="updatePaymentMethod(${idx}, 'name', this.value)" placeholder="Nombre Visible al Cliente (Ej: Pago con Tarjeta)">
-                        </div>
-                        
-                        ${extraFields}
-                        
-                        <textarea class="cyber-input w-full p-2 text-xs h-12" onchange="updatePaymentMethod(${idx}, 'info', this.value)" placeholder="Instrucciones Adicionales...">${pm.info || ''}</textarea>
-                    </div>`;
+                 c.innerHTML += `<div class="bg-[#111] p-4 border border-[#333] relative group space-y-3"><button onclick="removePaymentMethod(${idx})" class="absolute top-2 right-2 text-red-500 hover:text-white">X</button><div class="flex gap-2 items-center"><span class="text-[10px] text-gray-500 font-bold uppercase w-24">IDENTIFICADOR INTERNO:</span><input class="cyber-input flex-1 p-2 text-xs font-mono text-[#ccff00] border-[#ccff00]/50" value="${pm.internalName || ''}" onchange="updatePaymentMethod(${idx}, 'internalName', this.value)" placeholder="Ej: Link Camisa Yugi - Managua"></div><div class="flex gap-2"><select class="cyber-input w-1/3 p-2 text-xs uppercase" onchange="updatePaymentMethod(${idx}, 'type', this.value); renderPaymentConfig()"><option value="generic" ${pm.type==='generic'?'selected':''}>Genérico / QR</option><option value="bank" ${pm.type==='bank'?'selected':''}>Cuenta Bancaria</option><option value="link" ${pm.type==='link'?'selected':''}>Link de Pago</option></select><input class="cyber-input flex-1 p-2 text-xs font-bold" value="${pm.name}" onchange="updatePaymentMethod(${idx}, 'name', this.value)" placeholder="Nombre Visible al Cliente (Ej: Pago con Tarjeta)"></div>${extraFields}<textarea class="cyber-input w-full p-2 text-xs h-12" onchange="updatePaymentMethod(${idx}, 'info', this.value)" placeholder="Instrucciones Adicionales...">${pm.info || ''}</textarea></div>`;
              });
         }
         window.addPaymentMethodInput = () => { globalConfig.paymentMethods.push({type: 'generic', internalName: "Nuevo Método", name: "Método de Pago", info: ""}); renderPaymentConfig(); }
         window.updatePaymentMethod = (idx, field, val) => { globalConfig.paymentMethods[idx][field] = val; }
         window.removePaymentMethod = (idx) => { globalConfig.paymentMethods.splice(idx,1); renderPaymentConfig(); }
         
-        // --- CATEGORÍAS ---
         function renderCategoriesConfig() {
             const c = document.getElementById('categoriesContainer'); c.innerHTML = '';
             globalConfig.categories.forEach((cat, idx) => {
@@ -962,22 +694,27 @@
         window.addCategoryUI = () => { const val = document.getElementById('newCategoryInput').value.trim().toUpperCase(); if(val) { globalConfig.categories.push(val); renderCategoriesConfig(); document.getElementById('newCategoryInput').value = ''; } }
         window.removeCategory = (idx) => { globalConfig.categories.splice(idx,1); renderCategoriesConfig(); }
 
-        // --- SAVE CONFIGS ---
         window.saveGlobalConfig = async () => {
+             // FIX CRÍTICO V8.4: Validar elementos antes de leer .value
+             const titleEl = document.getElementById('confTitle');
+             const logoEl = document.getElementById('confLogo');
              const newData = {
-                 title: document.getElementById('confTitle').value,
-                 logo: document.getElementById('confLogo').value,
-                 banner: document.getElementById('confBanner').value,
-                 whatsapp: document.getElementById('confWhatsapp').value,
-                 instagram: document.getElementById('confInsta').value,
+                 title: titleEl ? titleEl.value : '',
+                 logo: logoEl ? logoEl.value : '',
                  categories: globalConfig.categories,
                  paymentMethods: globalConfig.paymentMethods
              };
              await setDoc(doc(db, "settings", "store_config"), newData, { merge: true });
              alert("Configuración Guardada Correctamente");
         }
-        // --- PORTADA CONFIG ---
-        function applyConfigToUI() { document.getElementById('confTitle').value = globalConfig.title || ""; document.getElementById('confLogo').value = globalConfig.logo || ""; document.getElementById('confBanner').value = globalConfig.banner || ""; document.getElementById('confWhatsapp').value = globalConfig.whatsapp || ""; document.getElementById('confInsta').value = globalConfig.instagram || ""; renderCategoriesConfig(); renderPaymentConfig(); }
+        function applyConfigToUI() { 
+            // FIX CRÍTICO V8.4: Validar elementos antes de asignar valor
+            const titleEl = document.getElementById('confTitle');
+            if(titleEl) titleEl.value = globalConfig.title || "";
+            const logoEl = document.getElementById('confLogo');
+            if(logoEl) logoEl.value = globalConfig.logo || "";
+            renderCategoriesConfig(); renderPaymentConfig(); 
+        }
         function applyLandingToUI() { document.getElementById('landingTitle').value = landingConfig.title || ""; document.getElementById('landingSubtitle').value = landingConfig.subtitle || ""; document.getElementById('landingLogo').value = landingConfig.logo || ""; document.getElementById('landingBgImage').value = landingConfig.bgImage || ""; document.getElementById('landingBtnText').value = landingConfig.btnText || ""; document.getElementById('landingStoreUrl').value = landingConfig.storeUrl || ""; document.getElementById('landingInsta').value = landingConfig.instagram || ""; document.getElementById('landingTiktok').value = landingConfig.tiktok || ""; document.getElementById('landingWhatsapp').value = landingConfig.whatsapp || ""; }
         window.saveLandingConfig = async () => {
              const d = { title: document.getElementById('landingTitle').value, subtitle: document.getElementById('landingSubtitle').value, logo: document.getElementById('landingLogo').value, bgImage: document.getElementById('landingBgImage').value, btnText: document.getElementById('landingBtnText').value, storeUrl: document.getElementById('landingStoreUrl').value, instagram: document.getElementById('landingInsta').value, tiktok: document.getElementById('landingTiktok').value, whatsapp: document.getElementById('landingWhatsapp').value };

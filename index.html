@@ -305,7 +305,6 @@
             const [showTable, setShowTable] = useState(false);
             
             // LOGICA BLINDADA DE DESCUENTO: 
-            // Debe existir, ser mayor a 0 y mayor al precio actual.
             const hasDiscount = product.comparePrice && Number(product.comparePrice) > 0 && Number(product.comparePrice) > Number(product.price);
 
             return (
@@ -333,9 +332,9 @@
             );
         };
 
-        // --- PANTALLA DE CONFIRMACIÓN PERSISTENTE (CON BOTÓN CANCELAR) ---
+        // --- PANTALLA DE CONFIRMACIÓN PERSISTENTE (CON FIX DE DB) ---
         const OrderConfirmationScreen = ({ orderData, onConfirmFinish, setCriticalError, onCancelOrder }) => {
-            const { orderId, total, paymentMethodData, customer, needsReceipt, receiptUrl: initialReceiptUrl } = orderData;
+            const { orderId, total, paymentMethodData, customer, needsReceipt, receiptUrl: initialReceiptUrl, firebaseId } = orderData; // AQUI RECIBIMOS EL ID REAL
             const [receiptImageURL, setReceiptImageURL] = useState(initialReceiptUrl);
             const [isUploading, setIsUploading] = useState(false);
             const [copied, setCopied] = useState(false);
@@ -346,6 +345,17 @@
                 try {
                     const url = await uploadImageToImgBB(file);
                     setReceiptImageURL(url);
+                    
+                    // --- CORRECCIÓN CRÍTICA: ACTUALIZAR FIREBASE ---
+                    if (isFirebaseActive && firebaseId) {
+                        await db.collection('orders').doc(firebaseId).update({ 
+                            receiptUrl: url,
+                            status: 'pending_verification' // Opcional: Cambiar estado
+                        });
+                        console.log("Comprobante actualizado en DB:", firebaseId);
+                    }
+                    // ----------------------------------------------
+
                     const updatedOrderData = { ...orderData, receiptUrl: url };
                     safeStorage.setItem(LAST_ORDER_KEY, JSON.stringify(updatedOrderData));
                 } catch (error) { setCriticalError("Error subiendo comprobante: " + error.message); } 
@@ -428,19 +438,14 @@
             const availableMethods = useMemo(() => {
                 let methods = storeConfig?.paymentMethods ? [...storeConfig.paymentMethods] : [];
                 
-                // 1. FORZAR EFECTIVO POR DEFECTO (Si no viene del admin, lo creamos nosotros)
+                // 1. FORZAR EFECTIVO POR DEFECTO
                 const hasCashConfig = methods.some(m => 
                     (m.name && m.name.toLowerCase().includes('efectivo')) || 
                     (m.internalName && m.internalName.toLowerCase().includes('efectivo'))
                 );
 
                 if (!hasCashConfig) {
-                    methods.push({
-                        type: 'generic',
-                        name: 'Efectivo',
-                        internalName: 'Efectivo',
-                        info: 'Pago contra entrega (Solo Managua)'
-                    });
+                    methods.push({ type: 'generic', name: 'Efectivo', internalName: 'Efectivo', info: 'Pago contra entrega (Solo Managua)' });
                 }
 
                 // 2. Filtrar métodos según reglas
@@ -449,21 +454,13 @@
                     const internalLower = m.internalName ? m.internalName.toLowerCase() : '';
                     const isCash = nameLower.includes('efectivo') || internalLower.includes('efectivo');
                     
-                    if (isCash) {
-                        // REGLA DE ORO: Efectivo SOLO en Managua
-                        return formData.department === 'Managua';
-                    }
-                    
-                    // El resto (Bancos, Links) siempre se muestran
+                    if (isCash) { return formData.department === 'Managua'; }
                     return true;
                 });
             }, [storeConfig, formData.department]);
 
-            // Auto-seleccionar si solo hay uno (ej: Link único)
             useEffect(() => {
-                if(availableMethods.length === 1 && selectedPaymentIndex === null) {
-                    setSelectedPaymentIndex(0);
-                }
+                if(availableMethods.length === 1 && selectedPaymentIndex === null) { setSelectedPaymentIndex(0); }
             }, [availableMethods]);
 
             const confirmOrder = async () => {
@@ -476,6 +473,8 @@
                 const needsReceipt = pm.type === 'bank' || pm.type === 'link' || (pm.type === 'generic' && !pm.name.toLowerCase().includes('efectivo'));
                 
                 try {
+                    let firebaseId = null;
+
                     if (isFirebaseActive && db) {
                         await db.runTransaction(async (transaction) => {
                             for (const item of cart) {
@@ -486,21 +485,23 @@
                                 if (currentStock < item.qty) throw new Error(`STOCK_ERROR: Solo quedan ${currentStock} de ${item.name} (${item.size}).`);
                                 transaction.update(productRef, { [`variants.${item.size}`]: currentStock - item.qty });
                             }
-                            const orderData = {
-                                orderId: newId, date: firebase.firestore.FieldValue.serverTimestamp(),
-                                customer: { name: formData.name, phone: formData.phone, detail: `${formData.address}, ${formData.neighborhood}, ${formData.department}` },
-                                items: cart, subtotal, shipping: shippingCost, total,
-                                paymentMethod: pm.name, cashAmount: cashAmount || null,
-                                status: needsReceipt ? 'pending_payment' : 'pending_delivery',
-                                receiptUrl: null,
-                                address: { department: formData.department, address: formData.address, neighborhood: formData.neighborhood }
-                            };
-                            await db.collection('orders').add(orderData);
                         });
+
+                        const orderData = {
+                            orderId: newId, date: firebase.firestore.FieldValue.serverTimestamp(),
+                            customer: { name: formData.name, phone: formData.phone, detail: `${formData.address}, ${formData.neighborhood}, ${formData.department}` },
+                            items: cart, subtotal, shipping: shippingCost, total,
+                            paymentMethod: pm.name, cashAmount: cashAmount || null,
+                            status: needsReceipt ? 'pending_payment' : 'pending_delivery',
+                            receiptUrl: null,
+                            address: { department: formData.department, address: formData.address, neighborhood: formData.neighborhood }
+                        };
+                        const docRef = await db.collection('orders').add(orderData);
+                        firebaseId = docRef.id; // GUARDAMOS EL ID REAL DE FIREBASE
                     }
 
                     const persistentData = {
-                        orderId: newId, total, paymentMethodData: pm, customer: formData, needsReceipt, receiptUrl: null
+                        orderId: newId, total, paymentMethodData: pm, customer: formData, needsReceipt, receiptUrl: null, firebaseId: firebaseId // PASAMOS EL ID AL STORAGE
                     };
                     safeStorage.setItem(LAST_ORDER_KEY, JSON.stringify(persistentData));
                     setPersistentOrder(persistentData);
